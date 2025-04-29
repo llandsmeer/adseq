@@ -9,13 +9,13 @@ class BGPQ1(typing.NamedTuple):
     @classmethod
     def init(cls, delay):
         del delay
-        return BGPQ(SRush_BGPQ_KeyOnly.make(size=8))
+        return BGPQ1(SRush_BGPQ_KeyOnly.make(size=8))
     def enqueue(self, n):
-        return BGPQ(self.inner.insert(8, jnp.array([n]).astype(float)))
+        return BGPQ1(self.inner.insert(8, jnp.array([n]).astype(float)))
     def pop(self, n):
         nxt, ks = self.inner.delete_min(1)
         hit = (ks <= n)[0]
-        return (jax.lax.cond(hit, lambda: BGPQ(nxt), lambda: self),
+        return (jax.lax.cond(hit, lambda: BGPQ1(nxt), lambda: self),
                 hit.astype('int32'))
 
 class SRush_BGPQ_KeyOnly(typing.NamedTuple):
