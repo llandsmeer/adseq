@@ -17,6 +17,8 @@ check = [
     implementations.FIFORing.sized(4),
     implementations.FIFORing.sized(8),
     implementations.FIFORing.sized(100),
+    implementations.SortedArray.sized(2),
+    implementations.SortedArray.sized(5)
 ]
 
 key = jax.random.PRNGKey(0)

@@ -1,4 +1,5 @@
 import jax
+import numpy as np
 import tqdm
 import time
 import jax.numpy as jnp
@@ -21,8 +22,8 @@ def mkevs(lam, Nevents, num, key=jax.random.PRNGKey(0)):
     return jax.vmap(lambda k: mkev(lam, Nevents, k))(keys)
 
 def time_queue_single(QueueT: type[implementations.BaseQueue]):
-    lam = 1000 # in units of dt
-    delay = 100 # units of dt
+    lam = 400 # in units of dt
+    delay = 80 # units of dt
     Nevents = 1_000
     stream = mkev(lam, Nevents)
     @jax.jit
@@ -39,14 +40,15 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
             xs=(jnp.arange(len(stream)), stream)
             )[0][1]
     f = jax.jit(f)
-    f(stream)
-    f(stream)
-    f(stream)
-    a = time.time()
-    f(stream)
-    b = time.time()
+    runs = []
+    for _ in range(5):
+        a = time.time()
+        f(stream)
+        b = time.time()
+        runs.append(b-a)
     # print(QueueT.__name__.ljust(20), f'{b - a: 10.7f}s')
-    return (b - a) / stream.shape[0] * 1e6
+    return np.mean(np.array(runs)) / stream.shape[0] * 1e6
+
 
 def time_queue_batched(QueueT: type[implementations.BaseQueue]):
     # assume dt = 0.025
@@ -72,11 +74,13 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
             )[0][1]
     f = jax.jit(f)
     stupid_sum += f(stream)
-    a = time.time()
-    stream = mkevs(lam, Nevents, num, key=jax.random.PRNGKey(1))
-    stupid_sum += f(stream)
-    b = time.time()
-    return (b - a) / stream.shape[1] * 1e6
+    runs = []
+    for _ in range(5):
+        a = time.time()
+        stupid_sum += f(stream)
+        b = time.time()
+        runs.append(b-a)
+    return np.mean(np.array(runs)) / stream.shape[1] * 1e6
 
 check = [
     implementations.BGPQ1,
@@ -90,6 +94,10 @@ check = [
     implementations.FIFORing.sized(4),
     implementations.FIFORing.sized(8),
     implementations.FIFORing.sized(100),
+    implementations.SortedArray.sized(2),
+    implementations.SortedArray.sized(4),
+    implementations.SortedArray.sized(8),
+    implementations.SortedArray.sized(100),
 ]
 
 print('Single')
