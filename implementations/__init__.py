@@ -1,7 +1,8 @@
-from .base import BaseQueue
-from .do_nothing import DoNothing
-from .ring import Ring
-from .single_spike import SingleSpike
-from .bgpq1 import BGPQ1
-from .lossy_ring import LossyRing
+from .base import *
+from .do_nothing import *
+from .ring import *
+from .single_spike import *
+from .bgpq1 import *
+from .lossy_ring import *
+from .fifo_ring import *
 

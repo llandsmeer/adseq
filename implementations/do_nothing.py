@@ -1,5 +1,7 @@
 import typing
 
+__all__ = 'DoNothing',
+
 class DoNothing(typing.NamedTuple):
     @classmethod
     def init(cls, delay):

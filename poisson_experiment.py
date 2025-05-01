@@ -1,4 +1,5 @@
 import jax
+import tqdm
 import time
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -33,6 +34,7 @@ def test_queue(QueueT: type[implementations.BaseQueue]):
         return queue, out
     _, trace = jax.lax.scan(f_loop, QueueT.init(delay), xs=(jnp.arange(len(stream)), stream))
     ok = (jnp.roll(stream, delay) == trace)[:-delay]
+    print(QueueT.__name__.ljust(20), f'{ok.mean()*100: 10.7f}%')
     if ok.mean() < 0.99:
         print('not good', QueueT.__name__)
     try:
@@ -64,20 +66,36 @@ def time_queue(QueueT: type[implementations.BaseQueue]):
     a = time.time()
     f(stream)
     b = time.time()
-    print(QueueT.__name__.ljust(20), f'{b - a: 10.7f}s')
+    # print(QueueT.__name__.ljust(20), f'{b - a: 10.7f}s')
+    return b - a
 
 test_queue(implementations.BGPQ1)
 test_queue(implementations.SingleSpike)
 test_queue(implementations.DoNothing)
 test_queue(implementations.Ring)
 test_queue(implementations.LossyRing.sized(8))
+test_queue(implementations.FIFORing.sized(2))
+test_queue(implementations.FIFORing.sized(4))
+test_queue(implementations.FIFORing.sized(8))
+test_queue(implementations.FIFORing.sized(100))
 
-time_queue(implementations.BGPQ1)
-time_queue(implementations.SingleSpike)
-time_queue(implementations.DoNothing)
-time_queue(implementations.Ring)
-time_queue(implementations.LossyRing.sized(2))
-time_queue(implementations.LossyRing.sized(4))
-time_queue(implementations.LossyRing.sized(100))
+check = [
+    implementations.BGPQ1,
+    implementations.SingleSpike,
+    implementations.DoNothing,
+    implementations.Ring,
+    implementations.LossyRing.sized(2),
+    implementations.LossyRing.sized(4),
+    implementations.LossyRing.sized(100),
+    implementations.FIFORing.sized(2),
+    implementations.FIFORing.sized(4),
+    implementations.FIFORing.sized(8),
+    implementations.FIFORing.sized(100),
+]
+
+times = [time_queue(imp) for imp in tqdm.tqdm(check)]
+
+for t, imp in sorted(zip(times, check)):
+    print(imp.__name__.ljust(20), f'{t: 10.7f}s')
 
 input('done')

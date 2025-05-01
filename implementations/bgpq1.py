@@ -4,6 +4,8 @@ import jax.numpy as jnp
 import jax
 from functools import partial
 
+__all__ = 'BGPQ1',
+
 class BGPQ1(typing.NamedTuple):
     inner: SRush_BGPQ_KeyOnly
     @classmethod

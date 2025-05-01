@@ -3,6 +3,8 @@ import jax
 
 INT_MAX = 0x7fffffff
 
+__all__ = 'SingleSpike',
+
 class SingleSpike(typing.NamedTuple):
     last_spike: int
     @classmethod
