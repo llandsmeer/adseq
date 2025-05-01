@@ -1,15 +1,18 @@
+import jax
+import jax.numpy as jnp
 import typing
 
 __all__ = 'DoNothing',
 
 class DoNothing(typing.NamedTuple):
+    empty: jax.Array
     @classmethod
     def init(cls, delay):
         del delay
-        return cls()
+        return cls(jnp.array(0))
     def enqueue(self, n):
         del n
-        return DoNothing()
+        return self
     def pop(self, n):
         del n
-        return DoNothing(), 0
+        return self, 0
