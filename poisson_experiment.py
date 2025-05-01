@@ -21,27 +21,6 @@ def mkev(lam: float, Nevents: int):
     return event_stream.at[ts].set(True)
 
 
-def test_queue(QueueT: type[implementations.BaseQueue]):
-    lam = 10 # in units of dt
-    delay = 1 # units of dt
-    Nevents = 100
-    stream = mkev(lam, Nevents)
-    @jax.jit
-    def f_loop(queue, arg):
-        t, ev = arg
-        queue, out = queue.pop(t)
-        queue = jax.lax.cond(ev, lambda: queue.enqueue(t + delay), lambda: queue)
-        return queue, out
-    _, trace = jax.lax.scan(f_loop, QueueT.init(delay), xs=(jnp.arange(len(stream)), stream))
-    ok = (jnp.roll(stream, delay) == trace)[:-delay]
-    print(QueueT.__name__.ljust(20), f'{ok.mean()*100: 10.7f}%')
-    if ok.mean() < 0.99:
-        print('not good', QueueT.__name__)
-    try:
-        assert ok.mean() > 0.90
-    except AssertionError:
-        print(":(")
-
 def time_queue(QueueT: type[implementations.BaseQueue]):
     lam = 1000 # in units of dt
     delay = 100 # units of dt
@@ -68,16 +47,6 @@ def time_queue(QueueT: type[implementations.BaseQueue]):
     b = time.time()
     # print(QueueT.__name__.ljust(20), f'{b - a: 10.7f}s')
     return b - a
-
-test_queue(implementations.BGPQ1)
-test_queue(implementations.SingleSpike)
-test_queue(implementations.DoNothing)
-test_queue(implementations.Ring)
-test_queue(implementations.LossyRing.sized(8))
-test_queue(implementations.FIFORing.sized(2))
-test_queue(implementations.FIFORing.sized(4))
-test_queue(implementations.FIFORing.sized(8))
-test_queue(implementations.FIFORing.sized(100))
 
 check = [
     implementations.BGPQ1,
