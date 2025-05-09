@@ -6,4 +6,5 @@ from .bgpq1 import *
 from .lossy_ring import *
 from .fifo_ring import *
 from .sorted_array import *
+from .gradient_queue import *
 
