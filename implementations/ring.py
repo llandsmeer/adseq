@@ -12,6 +12,9 @@ class Ring(typing.NamedTuple):
     def enqueue(self, n):
         delay = self.buffer.shape[0]
         return Ring(self.buffer.at[n % delay].add(1))
+    def enqueue_with_value(self, n, v):
+        delay = self.buffer.shape[0]
+        return Ring(self.buffer.at[n % delay].set(v))
     def pop(self, n):
         delay = self.buffer.shape[0]
         return Ring(self.buffer.at[n % delay].set(0)), \

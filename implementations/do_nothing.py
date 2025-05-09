@@ -13,6 +13,9 @@ class DoNothing(typing.NamedTuple):
     def enqueue(self, n):
         del n
         return self
+    def enqueue_with_value(self, n, v):
+        del n, v
+        return self
     def pop(self, n):
         del n
         return self, 0

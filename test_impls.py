@@ -18,7 +18,8 @@ check = [
     implementations.FIFORing.sized(8),
     implementations.FIFORing.sized(100),
     implementations.SortedArray.sized(2),
-    implementations.SortedArray.sized(5)
+    implementations.SortedArray.sized(5),
+    implementations.GradientQueue[implementations.Ring]
 ]
 
 key = jax.random.PRNGKey(0)
@@ -67,3 +68,4 @@ def test_coverage():
         if isinstance(cls, type) and \
            issubclass(cls, implementations.BaseQueue):
             assert k in checked
+

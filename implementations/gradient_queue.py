@@ -22,8 +22,8 @@ def spiketime_detect_vjp(primals, tangents):
     tangent_out = jax.lax.select(hit, - 1/dvdt * v_dot, 0.)
     return primal_out, tangent_out
 
-class GradientQueue:
-    def __new__(cls, TQPrim: BaseQueue, TQTan: BaseQueue | None):
+class GradientQueue(BaseQueue):
+    def __new__(cls, TQPrim: BaseQueue, TQTan: BaseQueue | None) -> BaseQueue:
         if TQTan is None: TQTan = TQPrim
         @jax.custom_jvp
         def init(delay):
@@ -35,13 +35,17 @@ class GradientQueue:
             return TQPrim.init(delay), TQTan.init(delay)
         @jax.custom_jvp
         def enqueue(queue: BaseQueue, n):
+            n = jax.numpy.asarray(n).astype(int)
             return queue.enqueue(n)
         @enqueue.defjvp
         def enqueue_jvp(p, t):
+            # so this goes wrong, queue_t is float0
             queue_p, n, = p
             queue_t, n_t, = t
+            breakpoint()
+            n = jax.numpy.asarray(n).astype(int)
             return queue_p.enqueue(n), queue_t.enqueue_with_value(n, n_t)
-        @jax.custom_vjp
+        @jax.custom_jvp
         def pop(queue, n):
             return queue.pop(n)
         @pop.defjvp
@@ -55,7 +59,15 @@ class GradientQueue:
             @classmethod
             def init(cls, delay): return GradQueue(init(delay))
             def enqueue(self, n): return GradQueue(enqueue(self.queue, n))
-            def pop(self, n):     return GradQueue(pop(self.queue, n))
-        return GradQueue
-    def __class_getitem__(cls, TQPrim: BaseQueue, TQTan: BaseQueue | None):
+            def pop(self, n):
+                q, o = pop(self.queue, n)
+                return GradQueue(q), o
+        return type(f'GradientQueue[{TQPrim.__name__},{TQTan.__name__}]', # type: ignore
+                    GradQueue.__bases__,
+                    dict(**GradQueue.__dict__))
+    def __class_getitem__(cls, k: BaseQueue | typing.Tuple[BaseQueue, BaseQueue|None]):
+        if isinstance(k, tuple) and len(k) == 2:
+            TQPrim, TQTan = k
+        else:
+            TQPrim, TQTan = k, None
         return cls.__new__(cls, TQPrim, TQTan)
