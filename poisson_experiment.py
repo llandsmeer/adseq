@@ -1,4 +1,5 @@
 import jax
+import json
 import numpy as np
 import tqdm
 import time
@@ -8,7 +9,7 @@ import matplotlib.pyplot as plt
 
 
 import jax
-jax.config.update('jax_platform_name', 'cpu')
+# jax.config.update('jax_platform_name', 'cpu')
 
 import implementations
 
@@ -105,12 +106,30 @@ check = [
     implementations.BGPQ1,
 ]
 
+def get_device_id():
+    import socket
+    hostname = socket.gethostname()
+    dev = jax.devices()[0]
+    device = dev.platform
+    hw_version = dev.client.platform_version
+    jax_version = str(jax.__version__)
+    o = dict(hostname=hostname,
+         device=device,
+         hw_version=hw_version,
+         jax_version=jax_version)
+    return f'{hostname}_{device}', o
 
+results = {
+        'single': {},
+        'batched': {}
+        }
+dev_name, results['host'] = get_device_id()
 
 print('Single')
 times = [time_queue_single(imp) for imp in tqdm.tqdm(check)]
 for t, imp in sorted(zip(times, check)):
     print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+    results['single'][str(imp.__name__)] = float(t)
 print()
 
 print('Batched')
@@ -121,5 +140,9 @@ for imp in (bar := tqdm.tqdm(check)):
     times.append(t)
 for t, imp in sorted(zip(times, check), key=lambda x:x[0]):
     print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+    results['batched'][str(imp.__name__)] = float(t)
+
+with open(f'benchmarks/{dev_name}.json', 'w') as f:
+    json.dump(results, f)
 
 input('done')
