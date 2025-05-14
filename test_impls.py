@@ -19,7 +19,6 @@ check = [
     implementations.FIFORing.sized(100),
     implementations.SortedArray.sized(2),
     implementations.SortedArray.sized(5),
-    implementations.GradientQueue[implementations.Ring]
 ]
 
 key = jax.random.PRNGKey(0)

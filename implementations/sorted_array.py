@@ -1,4 +1,3 @@
-
 '''
 Priority queue.
 Every insert is a full memory move.
