@@ -12,9 +12,11 @@ def mk_synapses(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, n:int, **
     init = _mk_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, **k).init()
     return jax.vmap(lambda _: init)(jnp.arange(n))
 
+
 ###
 
 def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
+    delay_ms = jnp.asarray(delay_ms, dtype='float32')
     alpha = jnp.exp(- dt_ms / tau_syn_ms)
     class StaticSynapse(typing.NamedTuple):
         queue: BaseQueue
@@ -23,10 +25,9 @@ def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
         def init(cls):
             return cls(Q.init(int(jnp.ceil(delay_ms/dt_ms)), *a, **k, grad=True), jnp.array(0.)) # type: ignore
         def timestep_spike_detect_pre(self, ts, v, vnext):
-            tpre = spike_detect(dt_ms, ts, vthres, v, vnext)
-            tpost = tpre + delay_ms
+            tpost = spike_detect(dt_ms, ts, vthres, v, vnext, delay_ms)
             queue = self.queue
-            queue = jax.lax.cond(tpre != -1, # must be a better solution
+            queue = jax.lax.cond(tpost != -1, # must be a better solution
                  lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
                  lambda: queue)
             queue, post_hit = queue.pop(time_to_timestep_keep_gradient(ts, dt_ms))
@@ -35,19 +36,20 @@ def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
     return StaticSynapse
 
 @jax.custom_jvp
-def spike_detect(dt, ts, vthres, v, vnext):
+def spike_detect(dt, ts, vthres, v, vnext, delay):
     del dt
     hit = (v < vthres) & (vnext >= vthres)
-    return jax.lax.select(hit, ts, -1.)
+    return jax.lax.select(hit, ts + delay, -1.)
 
 @spike_detect.defjvp
 def spike_detect_vjp(primals, tangents):
-    dt, ts, vthres, v, vnext = primals
-    _, _, _, v_dot, vnext_dot = tangents
+    dt, ts, vthres, v, vnext, delay = primals
+    _, _, _, v_dot, vnext_dot, delay_t = tangents
+    del vnext_dot
     dvdt = (vnext - v) / dt
     hit = (v < vthres) & (vnext >= vthres)
-    primal_out = jax.lax.select(hit, ts, -1.)
-    tangent_out = jax.lax.select(hit, - 1/dvdt * v_dot, 0.)
+    primal_out = jax.lax.select(hit, ts + delay, -1.)
+    tangent_out = jax.lax.select(hit, - 1/dvdt * v_dot + delay_t, 0.)
     return primal_out, tangent_out
 
 @jax.custom_jvp
