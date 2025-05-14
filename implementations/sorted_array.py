@@ -59,7 +59,9 @@ del _enqueue_jvp
 def _pop(self, n):
     hit = self.buffer[0] <= n
     return SortedArray(
+       # should benchmark which one is better
        jax.lax.select(hit, jnp.roll(self.buffer.at[0].set(INT_MAX), -1), self.buffer)
+       # jax.lax.select(hit, self.buffer.at[:-1].set(self.buffer[1:]).at[-1].set(INT_MAX), self.buffer)
        ), hit.astype(self.buffer.dtype)
 
 @_pop.defjvp
