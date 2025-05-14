@@ -15,7 +15,7 @@ def mk_synapses(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, n:int, **
 ###
 
 def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
-    alpha = jnp.exp(tau_syn_ms / dt_ms)
+    alpha = jnp.exp(- dt_ms / tau_syn_ms)
     class StaticSynapse(typing.NamedTuple):
         queue: BaseQueue
         isyn: float | jax.Array
@@ -43,11 +43,11 @@ def spike_detect(dt, ts, vthres, v, vnext):
 @spike_detect.defjvp
 def spike_detect_vjp(primals, tangents):
     dt, ts, vthres, v, vnext = primals
-    _, _, v_dot, vnext_dot = tangents
+    _, _, _, v_dot, vnext_dot = tangents
     dvdt = (vnext - v) / dt
     hit = (v < vthres) & (vnext >= vthres)
     primal_out = jax.lax.select(hit, ts, -1.)
-    tangent_out = jax.lax.select(hit, - 1/dvdt * (v_dot+vnext_dot)/2, 0.)
+    tangent_out = jax.lax.select(hit, - 1/dvdt * v_dot, 0.)
     return primal_out, tangent_out
 
 @jax.custom_jvp
