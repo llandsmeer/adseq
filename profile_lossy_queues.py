@@ -30,7 +30,7 @@ def spike_drop(QueueT, lam=10, delay=1, Nevents=100, drop=20, key=jax.random.PRN
     # assert (1-expected[got]).sum() == 0 # No FP
     return drop / expected.sum()
 
-def make_plot(imp, show=True, save=False):
+def make_plot(imp, ax):
     for lam in 10, 20, 50, 200:
         dly = jnp.arange(1, 2*lam)
         o = []
@@ -40,45 +40,45 @@ def make_plot(imp, show=True, save=False):
             out = f(dly)
             o.append(out)
         o = jnp.mean(jnp.vstack(o), axis=0)
-        plt.plot(dly/lam, o*100, label=f'$\\lambda$={lam}')
-
-    plt.title(imp.__name__)
-    plt.legend()
-    plt.ylabel('Drop rate (%)')
-    plt.xlabel('$d/\\lambda$ or $d\\cdot f$ ')
-    plt.ylim(0, 100)
-    if save:
-        plt.savefig(f'./img/drop_rate_{imp.__name__}.svg')
-    if show:
-        plt.show()
-    plt.clf()
+        ax.plot(dly/lam, o*100, label=f'$\\lambda$={lam}')
+    ax.set_title(imp.__name__)
+    # ax.legend()
+    ax.set_ylabel('Drop rate (%)')
+    ax.set_xlabel('$d/\\lambda$ or $d\\cdot f$ ')
+    ax.set_ylim(0, 100)
 
 
 
 check = [
     implementations.SingleSpike,
+    implementations.SingleSpikeKeep,
+    implementations.FIFORing.sized(2),
+    implementations.FIFORing.sized(3),
     implementations.LossyRing.sized(2),
     implementations.LossyRing.sized(3),
     implementations.LossyRing.sized(4),
     implementations.LossyRing.sized(5),
-    implementations.LossyRing.sized(6),
-    implementations.LossyRing.sized(7),
-    implementations.LossyRing.sized(8),
-    implementations.LossyRing.sized(9),
-    implementations.LossyRing.sized(10),
-    implementations.FIFORing.sized(1),
-    implementations.FIFORing.sized(2),
-    implementations.FIFORing.sized(3),
-    implementations.FIFORing.sized(4),
-    implementations.FIFORing.sized(5),
-    implementations.FIFORing.sized(6),
-    implementations.FIFORing.sized(7),
-    implementations.FIFORing.sized(8),
-    implementations.FIFORing.sized(9),
-    implementations.FIFORing.sized(10),
 ]
 
 if __name__ == '__main__':
-    for imp in tqdm.tqdm(check):
-        make_plot(imp, show=False, save=True)
+    n = len(check)
+    nc = 4
+    nr = int(jnp.ceil(n / nc))
+    fig, ax= plt.subplots(nrows=nr, ncols=nc, sharex=True, sharey=True,
+                          gridspec_kw=dict(hspace=.22, wspace=0))
+    aax = ax.flatten()
+    for i, imp in enumerate(tqdm.tqdm(check)): make_plot(imp, ax=aax[i])
+
+    for i in range(ax.shape[0]):
+        for j in range(ax.shape[1]):
+            if i != ax.shape[0]-1:
+                ax[i,j].set_xlabel('')
+            if j != 0:
+                ax[i,j].set_ylabel('')
+    handles, labels = aax[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center', ncol=4)
+    plt.tight_layout()
+    plt.savefig(f'./img/lossy_queues.svg')
+    plt.savefig(f'./img/lossy_queues.png')
+    plt.show()
 
