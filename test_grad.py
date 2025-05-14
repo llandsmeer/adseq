@@ -6,6 +6,9 @@ import jax.numpy as jnp
 
 import implementations
 
+import synapse
+
+
 @jax.custom_jvp
 def annotate_grad(x, x_t):
     del x_t
@@ -25,6 +28,18 @@ check = [
     implementations.SortedArray,
     ]
 
+@pytest.mark.parametrize("Q", check)
+def test_synapse(Q):
+    syn = synapse.mk_synapse(Q, delay_ms=10, dt_ms=0.025, vthres=1.0, tau_syn_ms=1.0)
+    f = jax.jit(type(syn).timestep_spike_detect_pre)
+    for i in range(1000):
+        t = 0.025*i
+        syn = f(syn, ts=t, v=t, vnext=t+0.025)
+        print(t)
+        if t < 1 + 10 - 0.025:
+            assert syn.isyn == 0
+        else:
+            assert syn.isyn > 0
 
 @pytest.mark.parametrize("Q", check)
 def test_init(Q):
@@ -61,3 +76,4 @@ def test_pop_multi(Q):
     print(go(0))
     assert go(0) == (1, 1)
     assert jax.jacfwd(go)(0.) == (42, 24)
+
