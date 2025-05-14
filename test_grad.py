@@ -21,6 +21,7 @@ check = [
     implementations.SingleSpike,
     implementations.Ring,
     implementations.FIFORing,
+    implementations.SortedArray,
     ]
 
 
@@ -56,5 +57,6 @@ def test_pop_multi(Q):
         q, o2 = q.pop(5.)
         del q
         return o1, o2
+    print(go(0))
     assert go(0) == (1, 1)
     assert jax.jacfwd(go)(0.) == (42, 24)
