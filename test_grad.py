@@ -19,6 +19,7 @@ def annotate_grad_jvp(primals, tangents):
 
 check = [
     implementations.SingleSpike,
+    implementations.SingleSpikeKeep,
     implementations.Ring,
     implementations.FIFORing,
     implementations.SortedArray,
@@ -45,7 +46,7 @@ def test_pop(Q):
     assert go(10.) == 1
     assert jax.jacfwd(go)(10.) == 42
 
-@pytest.mark.parametrize("Q", [x for x in check if x is not implementations.SingleSpike])
+@pytest.mark.parametrize("Q", [x for x in check if x not in [implementations.SingleSpike, implementations.SingleSpikeKeep]])
 def test_pop_multi(Q):
     def go(theta):
         t_spk1 = annotate_grad(theta, 42.) + 1.

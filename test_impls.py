@@ -9,6 +9,7 @@ import implementations
 check = [
     implementations.BGPQ1,
     implementations.SingleSpike,
+    implementations.SingleSpikeKeep,
     implementations.Ring,
     implementations.LossyRing.sized(2),
     implementations.LossyRing.sized(4),

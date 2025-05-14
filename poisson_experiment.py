@@ -5,6 +5,11 @@ import time
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
+
+
+import jax
+jax.config.update('jax_platform_name', 'cpu')
+
 import implementations
 
 # timestamps are encoded as 32-bit timesteps in units of dt
@@ -40,15 +45,15 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
             xs=(jnp.arange(len(stream)), stream)
             )[0][1]
     f = jax.jit(f)
+    f(stream).block_until_ready()
     runs = []
     for _ in range(5):
         a = time.time()
-        f(stream)
+        f(stream).block_until_ready()
         b = time.time()
         runs.append(b-a)
     # print(QueueT.__name__.ljust(20), f'{b - a: 10.7f}s')
     return np.mean(np.array(runs)) / stream.shape[0] * 1e6
-
 
 def time_queue_batched(QueueT: type[implementations.BaseQueue]):
     # assume dt = 0.025
@@ -73,18 +78,18 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
             xs=(jnp.arange(stream.shape[1]), stream.T)
             )[0][1]
     f = jax.jit(f)
-    stupid_sum += f(stream)
+    f(stream).block_until_ready()
     runs = []
-    for _ in range(5):
+    for _ in range(2):
         a = time.time()
-        stupid_sum += f(stream)
+        f(stream).block_until_ready()
         b = time.time()
         runs.append(b-a)
     return np.mean(np.array(runs)) / stream.shape[1] * 1e6
 
 check = [
-    implementations.BGPQ1,
     implementations.SingleSpike,
+    implementations.SingleSpikeKeep,
     implementations.DoNothing,
     implementations.Ring,
     implementations.LossyRing.sized(2),
@@ -97,16 +102,23 @@ check = [
     implementations.SortedArray.sized(2),
     implementations.SortedArray.sized(4),
     implementations.SortedArray.sized(8),
-    implementations.SortedArray.sized(100),
+    implementations.BGPQ1,
 ]
+
+
 
 print('Single')
 times = [time_queue_single(imp) for imp in tqdm.tqdm(check)]
 for t, imp in sorted(zip(times, check)):
     print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
 print()
+
 print('Batched')
-times = [time_queue_batched(imp) for imp in tqdm.tqdm(check)]
+times = []
+for imp in (bar := tqdm.tqdm(check)):
+    t = time_queue_batched(imp)
+    print(' (prelim)', imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+    times.append(t)
 for t, imp in sorted(zip(times, check), key=lambda x:x[0]):
     print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
 
