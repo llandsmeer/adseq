@@ -16,27 +16,11 @@ class FIFORing(typing.NamedTuple):
     head: int | jax.Array
     size: int | jax.Array
     @classmethod
-    def init(cls, delay, capacity=None):
+    def init(cls, delay, capacity=None, grad=False):
         return cls(
-                jnp.full(delay if capacity is None else capacity, INT_MAX, 'int32'),
+                jnp.full(delay if capacity is None else capacity, INT_MAX, 'float32' if grad else 'int32'),
                 0, 0
                 )
-    def enqueue(self, n):
-        cap = self.buffer.shape[0]
-        do_insert = self.size < cap
-        return FIFORing(
-           jax.lax.select(do_insert, self.buffer.at[(self.head + self.size) % cap].set(n), self.buffer),
-           self.head,
-           jax.lax.select(do_insert, self.size+1, self.size)
-           )
-    def pop(self, n):
-        cap = self.buffer.shape[0]
-        hit = self.buffer[self.head] <= n
-        return FIFORing(
-           jax.lax.select(hit, self.buffer.at[self.head].set(INT_MAX), self.buffer),
-           jax.lax.select(hit, (self.head+1) % cap, self.head),
-           jax.lax.select(hit, self.size-1, self.size)
-           ), hit.astype(int)
     @classmethod
     def sized(cls, n):
         "wish I could use __class_getitem__"
@@ -44,4 +28,62 @@ class FIFORing(typing.NamedTuple):
                     cls.__bases__,
                     {**cls.__dict__,
                      "init": functools.partial(cls.init, capacity=n)})
+    def enqueue(self, n):
+        return _enqueue(self, n)
+    def pop(self, n):
+        return _pop(self, n)
 
+@jax.custom_jvp
+def _enqueue(self, n):
+    cap = self.buffer.shape[0]
+    do_insert = self.size < cap
+    return FIFORing(
+       jax.lax.select(do_insert, self.buffer.at[(self.head + self.size) % cap].set(n), self.buffer),
+       self.head,
+       jax.lax.select(do_insert, self.size+1, self.size)
+       )
+@_enqueue.defjvp
+def _enqueue_jvp(primals, tangents):
+    self, n = primals
+    self_t, n_t = tangents
+    cap = self.buffer.shape[0]
+    do_insert = self.size < cap
+    return FIFORing(
+               jax.lax.select(do_insert, self.buffer.at[(self.head + self.size) % cap].set(n), self.buffer),
+               self.head,
+               jax.lax.select(do_insert, self.size+1, self.size)
+       ),  FIFORing(
+               jax.lax.select(do_insert, self_t.buffer.at[(self.head + self.size) % cap].set(n_t), self_t.buffer),
+               self_t.head,
+               self_t.size
+       )
+del _enqueue_jvp
+
+@jax.custom_jvp
+def _pop(self, n):
+    cap = self.buffer.shape[0]
+    hit = self.buffer[self.head] <= n
+    return FIFORing(
+       jax.lax.select(hit, self.buffer.at[self.head].set(INT_MAX), self.buffer),
+       jax.lax.select(hit, (self.head+1) % cap, self.head),
+       jax.lax.select(hit, self.size-1, self.size)
+       ), hit.astype(self.buffer.dtype)
+
+@_pop.defjvp
+def _pop_jvp(primals, tangents):
+    self, n = primals
+    self_t, n_t = tangents
+    del n_t
+    cap = self.buffer.shape[0]
+    hit = self.buffer[self.head] <= n
+    return (FIFORing(
+               jax.lax.select(hit, self.buffer.at[self.head].set(INT_MAX), self.buffer),
+               jax.lax.select(hit, (self.head+1) % cap, self.head),
+               jax.lax.select(hit, self.size-1, self.size)
+       ), hit.astype(self.buffer.dtype)), (
+           FIFORing(
+               jax.lax.select(hit, self_t.buffer.at[self.head].set(INT_MAX), self_t.buffer),
+               self_t.head,
+               self_t.size
+       ), self_t.buffer[self.head])
+del _pop_jvp
