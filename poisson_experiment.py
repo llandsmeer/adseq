@@ -6,9 +6,6 @@ import time
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
-
-
-import jax
 # jax.config.update('jax_platform_name', 'cpu')
 
 import implementations

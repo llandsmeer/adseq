@@ -14,12 +14,11 @@ def mk_synapses(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, n:int, **
     init = _mk_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, **k).init()
     return jax.vmap(lambda _: init)(jnp.arange(n))
 
-
 ###
 
 def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay_ms=None, **k):
     '''
-    If taking gradient w.r.t. delay_ms, 
+    If taking gradient w.r.t. delay_ms, put max_delay_ms
     '''
     delay_ms_is_concrete = not isinstance(delay_ms, jax.core.Tracer)
     max_delay_ms = delay_ms if max_delay_ms is None and delay_ms_is_concrete else max_delay_ms
