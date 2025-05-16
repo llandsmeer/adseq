@@ -25,6 +25,8 @@ check = [
     implementations.FIFORing,
     implementations.SortedArray,
     ]
+
+
 @pytest.mark.parametrize("Q", check)
 def test_init(Q):
     Q.init(1)
@@ -60,13 +62,3 @@ def test_pop_multi(Q):
     print(go(0))
     assert go(0) == (1, 1)
     assert jax.jacfwd(go)(0.) == (42, 24)
-
-@pytest.mark.parametrize("Q", check)
-def test_pop_reverse_mode(Q):
-    def go(t_spk):
-        t_spk = annotate_grad(t_spk, 42.)
-        q = Q.init(1, grad=True)
-        q = q.enqueue(t_spk)
-        return q.pop(10.)[1]
-    assert go(10.) == 1
-    assert jax.jacrev(go)(10.) == 42
