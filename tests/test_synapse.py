@@ -1,10 +1,12 @@
 import pytest
-
 import jax
 import jax.numpy as jnp
 
-import implementations
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
+import implementations
 import synapse
 
 check = [
@@ -66,3 +68,4 @@ def test_synapse_grad_wrt_delay(Q):
     assert jnp.isfinite(c)
     assert a < 0
     assert c > 0
+

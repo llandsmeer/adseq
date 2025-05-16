@@ -4,6 +4,10 @@ import pytest
 import jax
 import jax.numpy as jnp
 
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+os.chdir(os.path.dirname(os.path.dirname(__file__)))
+
 import implementations
 
 check = [
@@ -69,4 +73,3 @@ def test_coverage():
         if isinstance(cls, type) and \
            issubclass(cls, implementations.BaseQueue):
             assert k in checked
-

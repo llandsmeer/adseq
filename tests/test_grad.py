@@ -1,5 +1,10 @@
 import pytest
 import jax
+
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+os.chdir(os.path.dirname(os.path.dirname(__file__)))
+
 import implementations
 
 
@@ -55,4 +60,3 @@ def test_pop_multi(Q):
     print(go(0))
     assert go(0) == (1, 1)
     assert jax.jacfwd(go)(0.) == (42, 24)
-
