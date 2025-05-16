@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import time
+
+import tqdm
+
 import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -9,29 +14,90 @@ os.chdir(os.path.dirname(os.path.dirname(__file__)))
 import synapse
 import implementations
 
-def plot_sim():
-    ts, (trace, spikes) = sim()
+def main():
+    print('=== regular ===')
+    benchmark_regular()
+    print('=== forward ===')
+    benchmark_grad(jax.jacfwd)
+    # print('=== reverse ===')
+    # benchmark_grad(jax.jacrev)
+
+qs = [
+    implementations.DoNothing,
+    implementations.SingleSpike,
+    implementations.SingleSpikeKeep,
+    implementations.FIFORing.sized(2),
+    implementations.FIFORing.sized(3),
+    implementations.FIFORing.sized(4),
+    implementations.SortedArray.sized(2),
+    implementations.SortedArray.sized(3),
+    implementations.SortedArray.sized(4),
+    implementations.Ring,
+    ]
+
+def benchmark_regular():
+    key = jax.random.PRNGKey(0)
+    n = 10
+    weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
+    for Q in qs:
+        t = jax.jit(lambda w: sim(n, w, Q=Q)[1][1].sum())
+        t(weight).block_until_ready()
+        deltas = []
+        for _ in range(5):
+            a = time.time()
+            t(weight).block_until_ready()
+            b = time.time()
+            deltas.append(b - a)
+        tmean = jnp.mean(jnp.array(deltas))
+        print(Q.__name__.ljust(20), tmean, 'seconds')
+
+def benchmark_grad(jac=jax.jacfwd):
+    key = jax.random.PRNGKey(0)
+    n = 10
+    weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
+    for Q in qs:
+        t = jax.jit(jac(lambda w: sim(n, w, Q=Q)[1][1].sum()))
+        t(weight).block_until_ready()
+        deltas = []
+        for _ in range(5):
+            a = time.time()
+            t(weight).block_until_ready()
+            b = time.time()
+            deltas.append(b - a)
+        tmean = jnp.mean(jnp.array(deltas))
+        print(Q.__name__.ljust(20), tmean, 'seconds')
+
+def plot_sim(n):
+    'plot_sim(100)'
+    ts, (trace, spikes) = sim(n)
+    plt.plot(ts, spikes.sum(1))
+    plt.ylim(0, 30)
+    plt.show()
     plt.plot(ts, trace)
     plt.show()
-    for i, neuron in enumerate(spikes.T):
-        print(i)
+    for i, neuron in enumerate(tqdm.tqdm(spikes.T)):
         idx, = jnp.where(neuron)
         plt.plot(idx, i * jnp.ones_like(idx), 'o')
     plt.show()
 
-def sim():
-    n = 23
+def sim(
+    n = 23,
+    weight: None | jax.Array = None,
+    Q = implementations.SingleSpike
+        ):
     dt = 0.025
     tau_syn = 2.
     tau_mem = 10.
     vthres = 1.0
     key = jax.random.PRNGKey(0)
-    weight = 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
+    if weight is None:
+        weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
     delays = 4 + .5*jax.random.normal(key, (n,))
-    Q = implementations.SingleSpike
     syn = synapse.mk_synapses(Q, # type: ignore
           delay_ms=delays, dt_ms=dt,
-          vthres=vthres, tau_syn_ms=tau_syn, n=n)
+          vthres=vthres, tau_syn_ms=tau_syn, n=n,
+          max_delay_ms=7
+          )
     syn_step = jax.jit(type(syn).timestep_spike_detect_pre)
     v = jnp.zeros(n)
     state = v, syn
@@ -46,7 +112,6 @@ def sim():
         return state, (v, s)
     ts = jnp.arange(10000) * dt
     _, trace = jax.lax.scan(step, state, xs=ts)
-    print(trace)
     return ts, trace
 
 @jax.custom_jvp
@@ -72,4 +137,4 @@ def zero_diagonal(arr):
     return arr * (1 - jnp.eye(n))
 
 if __name__ == '__main__':
-    plot_sim()
+    main()

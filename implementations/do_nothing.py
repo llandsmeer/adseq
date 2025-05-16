@@ -7,7 +7,7 @@ __all__ = 'DoNothing',
 class DoNothing(typing.NamedTuple):
     empty: jax.Array
     @classmethod
-    def init(cls, delay):
+    def init(cls, delay, grad=False):
         del delay
         return cls(jnp.array(0))
     def enqueue(self, n):
