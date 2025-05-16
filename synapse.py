@@ -10,9 +10,8 @@ __all__ = 'mk_synapse', 'mk_synapses'
 def mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
     return _mk_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, **k).init()
 
-def mk_synapses(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, n:int, **k):
-    init = _mk_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, **k).init()
-    return jax.vmap(lambda _: init)(jnp.arange(n))
+def mk_synapses(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, n: int, **k):
+    return _mk_multi_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, n=n, **k).init()
 
 ###
 
@@ -41,6 +40,42 @@ def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay
             isyn = alpha * self.isyn + apply_recv_gradient(post_hit, tau_syn_ms)
             return StaticSynapse(queue, isyn)
     return StaticSynapse
+
+def _mk_multi_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay_ms=None, n, **k):
+    delay_ms_is_concrete = not isinstance(delay_ms, jax.core.Tracer)
+    max_delay_ms = delay_ms if max_delay_ms is None and delay_ms_is_concrete else max_delay_ms
+    assert max_delay_ms is not None
+    delay_ms = jnp.asarray(delay_ms, dtype='float32')
+    alpha = jnp.exp(- dt_ms / tau_syn_ms)
+    class StaticMultiSynapse(typing.NamedTuple):
+        queues: BaseQueue
+        isyn: float | jax.Array
+        @classmethod
+        def init(cls):
+            max_delay_steps = int(math.ceil(max_delay_ms/dt_ms))
+            queues = jax.vmap(lambda _: Q.init(max_delay_steps, *a, **k, grad=True))(jnp.empty(n)) # type: ignore
+            isyn = jnp.zeros(n, dtype='float32')
+            return cls(queues, isyn) # type: ignore
+        def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms=delay_ms):
+            if len(delay_ms.shape) == 0 or delay_ms.shape[0] == 1:
+                delay_ms = jnp.full(n, delay_ms)
+            assert len(delay_ms.shape) == 1 and delay_ms.shape[0] == n
+            assert len(v.shape) == 1 and v.shape[0] == n
+            assert len(vnext.shape) == 1 and vnext.shape[0] == n
+            def timestep(queue, isyn, v, vnext, delay_ms):
+                tpost = spike_detect(dt_ms, ts, vthres, v, vnext, delay_ms)
+                queue = jax.lax.cond(tpost != -1, # must be a better solution
+                     lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
+                     lambda: queue)
+                queue, post_hit = queue.pop(time_to_timestep_keep_gradient(ts, dt_ms))
+                isyn = alpha * isyn + \
+                       apply_recv_gradient(post_hit, tau_syn_ms)
+                return (queue, isyn)
+            queues, isyn = jax.vmap(timestep)(
+                    self.queues, self.isyn,
+                    v, vnext, delay_ms)
+            return StaticMultiSynapse(queues, isyn)
+    return StaticMultiSynapse
 
 @jax.custom_jvp
 def spike_detect(dt, ts, vthres, v, vnext, delay):
