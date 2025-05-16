@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import json
 import time
 
 import tqdm
@@ -14,11 +15,31 @@ os.chdir(os.path.dirname(os.path.dirname(__file__)))
 import synapse
 import implementations
 
+def get_device_id():
+    import socket
+    hostname = socket.gethostname()
+    dev = jax.devices()[0]
+    device = dev.platform
+    hw_version = dev.client.platform_version
+    jax_version = str(jax.__version__)
+    o = dict(hostname=hostname,
+         device=device,
+         hw_version=hw_version,
+         jax_version=jax_version)
+    return f'{hostname}_{device}', o
+
 def main():
+    results = {
+            'regular': {},
+            'forward': {}
+            }
+    dev_name, results['host'] = get_device_id()
     print('=== regular ===')
-    benchmark_regular()
+    results['regular'].update(benchmark_regular())
     print('=== forward ===')
-    benchmark_grad(jax.jacfwd)
+    results['forward'].update(benchmark_grad(jax.jacfwd))
+    with open(f'benchmarks/{dev_name}_grad.json', 'w') as f:
+        json.dump(results, f)
     # print('=== reverse ===')
     # benchmark_grad(jax.jacrev)
 
@@ -39,6 +60,7 @@ def benchmark_regular():
     key = jax.random.PRNGKey(0)
     n = 10
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
+    out = {}
     for Q in qs:
         t = jax.jit(lambda w: sim(n, w, Q=Q)[1][1].sum())
         t(weight).block_until_ready()
@@ -49,12 +71,15 @@ def benchmark_regular():
             b = time.time()
             deltas.append(b - a)
         tmean = jnp.mean(jnp.array(deltas))
+        out[Q.__name__] = float(tmean) / 10000 * 1e6
         print(Q.__name__.ljust(20), tmean, 'seconds')
+    return out
 
 def benchmark_grad(jac=jax.jacfwd):
     key = jax.random.PRNGKey(0)
     n = 10
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
+    out = {}
     for Q in qs:
         t = jax.jit(jac(lambda w: sim(n, w, Q=Q)[1][1].sum()))
         t(weight).block_until_ready()
@@ -65,7 +90,9 @@ def benchmark_grad(jac=jax.jacfwd):
             b = time.time()
             deltas.append(b - a)
         tmean = jnp.mean(jnp.array(deltas))
+        out[Q.__name__] = float(tmean) / 10000 * 1e6
         print(Q.__name__.ljust(20), tmean, 'seconds')
+    return out
 
 def plot_sim(n):
     'plot_sim(100)'
