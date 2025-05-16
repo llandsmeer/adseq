@@ -15,7 +15,7 @@ def mk_synapses(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, n: int, *
 
 ###
 
-def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay_ms=None, **k):
+def _mk_synapse(Q: type[BaseQueue], *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay_ms=None, **k):
     '''
     If taking gradient w.r.t. delay_ms, put max_delay_ms
     '''
@@ -41,10 +41,10 @@ def _mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay
             return StaticSynapse(queue, isyn)
     return StaticSynapse
 
-def _mk_multi_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay_ms=None, n, **k):
-    delay_ms_is_concrete = not isinstance(delay_ms, jax.core.Tracer)
+def _mk_multi_synapse(Q: type[BaseQueue], *a, delay_ms, dt_ms, vthres, tau_syn_ms, max_delay_ms=None, n, **k):
+    delay_ms_is_concrete = not isinstance(delay_ms, jax.core.Tracer) and (not hasattr(delay_ms, 'shape') or len(delay_ms) == 1)
     max_delay_ms = delay_ms if max_delay_ms is None and delay_ms_is_concrete else max_delay_ms
-    assert max_delay_ms is not None
+    # assert max_delay_ms is not None
     delay_ms = jnp.asarray(delay_ms, dtype='float32')
     alpha = jnp.exp(- dt_ms / tau_syn_ms)
     class StaticMultiSynapse(typing.NamedTuple):
@@ -52,7 +52,7 @@ def _mk_multi_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, max
         isyn: float | jax.Array
         @classmethod
         def init(cls):
-            max_delay_steps = int(math.ceil(max_delay_ms/dt_ms))
+            max_delay_steps = int(math.ceil(max_delay_ms/dt_ms)) if max_delay_ms is not None else None
             queues = jax.vmap(lambda _: Q.init(max_delay_steps, *a, **k, grad=True))(jnp.empty(n)) # type: ignore
             isyn = jnp.zeros(n, dtype='float32')
             return cls(queues, isyn) # type: ignore
