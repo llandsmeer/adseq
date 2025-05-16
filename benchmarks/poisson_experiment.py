@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import jax
 import json
 import numpy as np
@@ -6,6 +7,10 @@ import time
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
+
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+os.chdir(os.path.dirname(os.path.dirname(__file__)))
 # jax.config.update('jax_platform_name', 'cpu')
 
 import implementations
