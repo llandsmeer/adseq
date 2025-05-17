@@ -13,6 +13,9 @@ import typing
 __all__ = 'get_device_id', 'mkrunner', 'set_backend'
 
 def estimate_backend():
+    b = os.environ.get('BACKEND', '').strip()
+    if b:
+        return b
     hostname = socket.gethostname()
     if hostname == 'Groqhost1':
         return 'groq'
@@ -54,6 +57,9 @@ def _convert_to_tf(f, x, names=None):
     return f_tf, sig
 
 def _convert_to_onnx(f, x, fn='/tmp/runner.onnx', opset=16, names=None):
+    # this doesn't work:
+    # from jax2onnx import to_onnx
+    # return to_onnx(f, x)
     import tf2onnx
     f_tf, sig = _convert_to_tf(f, x, names)
     onnx = tf2onnx.convert.from_function(f_tf, input_signature=sig, output_path=fn, opset=opset)
