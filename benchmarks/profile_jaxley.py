@@ -158,6 +158,7 @@ def sim():
     s_new = jx.integrate(net, delta_t=dt, params=NEW)
     plt.plot(s_old.T, color='black')
     plt.plot(s_new.T-100, color='black')
+    plt.savefig('./img/delay_training.png')
     plt.show()
 
 if __name__ == '__main__':
