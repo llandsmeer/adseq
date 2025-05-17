@@ -14,6 +14,7 @@ os.chdir(os.path.dirname(os.path.dirname(__file__)))
 # jax.config.update('jax_platform_name', 'cpu')
 
 import implementations
+import benchmarks
 
 # timestamps are encoded as 32-bit timesteps in units of dt
 
@@ -32,7 +33,7 @@ def mkevs(lam, Nevents, num, key=jax.random.PRNGKey(0)):
 def time_queue_single(QueueT: type[implementations.BaseQueue]):
     lam = 400 # in units of dt
     delay = 80 # units of dt
-    Nevents = 1_000
+    Nevents = 1_00
     stream = mkev(lam, Nevents)
     @jax.jit
     def f_loop(carry, arg):
@@ -47,12 +48,11 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
             init=(QueueT.init(delay), 0),
             xs=(jnp.arange(len(stream)), stream)
             )[0][1]
-    f = jax.jit(f)
-    f(stream).block_until_ready()
+    runner = benchmarks.mkrunner(f, stream)
     runs = []
     for _ in range(5):
         a = time.time()
-        f(stream).block_until_ready()
+        runner()
         b = time.time()
         runs.append(b-a)
     # print(QueueT.__name__.ljust(20), f'{b - a: 10.7f}s')
@@ -60,7 +60,6 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
 
 def time_queue_batched(QueueT: type[implementations.BaseQueue]):
     # assume dt = 0.025
-    stupid_sum = 0
     lam = 400 # 100 Hz
     delay = 80 # 2 ms
     Nevents = 100
@@ -80,12 +79,11 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
             init=(init, 0),
             xs=(jnp.arange(stream.shape[1]), stream.T)
             )[0][1]
-    f = jax.jit(f)
-    f(stream).block_until_ready()
+    runner = benchmarks.mkrunner(f, stream)
     runs = []
-    for _ in range(2):
+    for _ in range(5):
         a = time.time()
-        f(stream).block_until_ready()
+        runner()
         b = time.time()
         runs.append(b-a)
     return np.mean(np.array(runs)) / stream.shape[1] * 1e6
@@ -108,43 +106,30 @@ check = [
     implementations.BGPQ1,
 ]
 
-def get_device_id():
-    import socket
-    hostname = socket.gethostname()
-    dev = jax.devices()[0]
-    device = dev.platform
-    hw_version = dev.client.platform_version
-    jax_version = str(jax.__version__)
-    o = dict(hostname=hostname,
-         device=device,
-         hw_version=hw_version,
-         jax_version=jax_version)
-    return f'{hostname}_{device}', o
+def run():
+    results = {
+            'single': {},
+            'batched': {}
+            }
+    dev_name, results['host'] = benchmarks.get_device_id()
+    print('Single')
+    times = [time_queue_single(imp) for imp in tqdm.tqdm(check)]
+    for t, imp in sorted(zip(times, check)):
+        print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+        results['single'][str(imp.__name__)] = float(t)
+    print()
+    print('Batched')
+    times = []
+    for imp in (bar := tqdm.tqdm(check)):
+        t = time_queue_batched(imp)
+        print(' (prelim)', imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+        times.append(t)
+    for t, imp in sorted(zip(times, check), key=lambda x:x[0]):
+        print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+        results['batched'][str(imp.__name__)] = float(t)
+    with open(f'benchmarks/{dev_name}.json', 'w') as f:
+        json.dump(results, f)
+    input('done')
 
-results = {
-        'single': {},
-        'batched': {}
-        }
-dev_name, results['host'] = get_device_id()
-
-print('Single')
-times = [time_queue_single(imp) for imp in tqdm.tqdm(check)]
-for t, imp in sorted(zip(times, check)):
-    print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
-    results['single'][str(imp.__name__)] = float(t)
-print()
-
-print('Batched')
-times = []
-for imp in (bar := tqdm.tqdm(check)):
-    t = time_queue_batched(imp)
-    print(' (prelim)', imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
-    times.append(t)
-for t, imp in sorted(zip(times, check), key=lambda x:x[0]):
-    print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
-    results['batched'][str(imp.__name__)] = float(t)
-
-with open(f'benchmarks/{dev_name}.json', 'w') as f:
-    json.dump(results, f)
-
-input('done')
+if __name__ == '__main__':
+    run()

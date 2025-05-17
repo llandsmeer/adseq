@@ -12,28 +12,17 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
+import benchmarks
 import synapse
 import implementations
 
-def get_device_id():
-    import socket
-    hostname = socket.gethostname()
-    dev = jax.devices()[0]
-    device = dev.platform
-    hw_version = dev.client.platform_version
-    jax_version = str(jax.__version__)
-    o = dict(hostname=hostname,
-         device=device,
-         hw_version=hw_version,
-         jax_version=jax_version)
-    return f'{hostname}_{device}', o
 
 def main():
     results = {
             'regular': {},
             'forward': {}
             }
-    dev_name, results['host'] = get_device_id()
+    dev_name, results['host'] = benchmarks.get_device_id()
     print('=== regular ===')
     results['regular'].update(benchmark_regular())
     print('=== forward ===')
@@ -63,11 +52,11 @@ def benchmark_regular():
     out = {}
     for Q in qs:
         t = jax.jit(lambda w: sim(n, w, Q=Q)[1][1].sum())
-        t(weight).block_until_ready()
+        runner = benchmarks.mkrunner(t, weight)
         deltas = []
         for _ in range(5):
             a = time.time()
-            t(weight).block_until_ready()
+            runner()
             b = time.time()
             deltas.append(b - a)
         tmean = jnp.mean(jnp.array(deltas))
