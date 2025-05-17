@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 
 def go(name, ax, labels, values):
     ax.bar(
-            [x for x, y in enumerate(values) if y is not None],
-            [x for x in values if x is not None], color='#338fff')
+            [x for x, y in enumerate(values) if y is not None and np.isfinite(y)],
+            [x for x in values if x is not None and np.isfinite(x)], color='#338fff')
     #lim = sorted(values)[-2]*1.5
     lim = sorted(x for x in values if x is not None)[-1]
     for i, (l, t) in enumerate(zip(labels, values)):

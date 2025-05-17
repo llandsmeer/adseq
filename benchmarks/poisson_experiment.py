@@ -7,6 +7,7 @@ import time
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
+NREPEATS = 1
 
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -35,7 +36,6 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
     delay = 80 # units of dt
     Nevents = 1_00
     stream = mkev(lam, Nevents)
-    @jax.jit
     def f_loop(carry, arg):
         queue, total = carry
         t, ev = arg
@@ -43,19 +43,19 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
         queue = jax.lax.cond(ev, lambda: queue.enqueue(t + delay), lambda: queue)
         total = total + out
         return (queue, total), None
-    f = lambda stream:jax.lax.scan(
-            f=f_loop,
+    runner = benchmarks.mkrunner_loop(
+            f_loop,
             init=(QueueT.init(delay), 0),
-            xs=(jnp.arange(len(stream)), stream)
-            )[0][1]
-    runner = benchmarks.mkrunner(f, stream)
+            xs=stream)
     runs = []
-    for _ in range(5):
+    for _ in range(NREPEATS):
         a = time.time()
-        runner()
+        o = runner()
         b = time.time()
-        runs.append(b-a)
-    # print(QueueT.__name__.ljust(20), f'{b - a: 10.7f}s')
+        if isinstance(o, Exception):
+            print(repr(o))
+        else:
+            runs.append(b-a)
     return np.mean(np.array(runs)) / stream.shape[0] * 1e6
 
 def time_queue_batched(QueueT: type[implementations.BaseQueue]):
@@ -74,18 +74,19 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
         total = total + out.sum()
         return (queue, total), None
     init = jax.vmap(lambda _: QueueT.init(delay))(jnp.full(num, 0)) # type: ignore
-    f = lambda stream:jax.lax.scan(
-            f=f_loop,
+    runner = benchmarks.mkrunner_loop(
+            f_loop,
             init=(init, 0),
-            xs=(jnp.arange(stream.shape[1]), stream.T)
-            )[0][1]
-    runner = benchmarks.mkrunner(f, stream)
+            xs=stream.T)
     runs = []
-    for _ in range(5):
+    for _ in range(NREPEATS):
         a = time.time()
-        runner()
+        o = runner()
         b = time.time()
-        runs.append(b-a)
+        if isinstance(o, Exception):
+            print(repr(o))
+        else:
+            runs.append(b-a)
     return np.mean(np.array(runs)) / stream.shape[1] * 1e6
 
 check = [
