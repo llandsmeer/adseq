@@ -11,6 +11,7 @@ os.chdir(os.path.dirname(os.path.dirname(__file__)))
 import implementations
 
 check = [
+    implementations.BinaryHeap,
     implementations.BGPQ1,
     implementations.SingleSpike,
     implementations.SingleSpikeKeep,

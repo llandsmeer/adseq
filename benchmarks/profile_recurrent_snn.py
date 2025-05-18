@@ -20,17 +20,18 @@ import implementations
 def main():
     results = {
             'regular': {},
-            'forward': {}
+            'forward': {},
+            'reverse': {}
             }
     dev_name, results['host'] = benchmarks.get_device_id()
     print('=== regular ===')
     results['regular'].update(benchmark_regular())
     print('=== forward ===')
     results['forward'].update(benchmark_grad(jax.jacfwd))
+    print('=== reverse ===')
+    results['reverse'].update(benchmark_grad(jax.jacrev))
     with open(f'benchmarks/{dev_name}_grad.json', 'w') as f:
         json.dump(results, f)
-    # print('=== reverse ===')
-    # benchmark_grad(jax.jacrev)
 
 qs = [
     implementations.DoNothing,
@@ -45,9 +46,8 @@ qs = [
     implementations.Ring,
     ]
 
-def benchmark_regular():
+def benchmark_regular(n=100):
     key = jax.random.PRNGKey(0)
-    n = 10
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
     out = {}
     for Q in qs:
@@ -64,23 +64,26 @@ def benchmark_regular():
         print(Q.__name__.ljust(20), tmean, 'seconds')
     return out
 
-def benchmark_grad(jac=jax.jacfwd):
+def benchmark_grad(jac=jax.jacfwd, n=100):
     key = jax.random.PRNGKey(0)
-    n = 10
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
     out = {}
     for Q in qs:
-        t = jax.jit(jac(lambda w: sim(n, w, Q=Q)[1][1].sum()))
-        t(weight).block_until_ready()
-        deltas = []
-        for _ in range(5):
-            a = time.time()
-            t(weight).block_until_ready()
-            b = time.time()
-            deltas.append(b - a)
-        tmean = jnp.mean(jnp.array(deltas))
-        out[Q.__name__] = float(tmean) / 10000 * 1e6
-        print(Q.__name__.ljust(20), tmean, 'seconds')
+        try:
+            t = jax.jit(jac(lambda w: sim(n, w, Q=Q)[1][1].sum()))
+            runner = benchmarks.mkrunner(t, weight)
+            deltas = []
+            for _ in range(5):
+                a = time.time()
+                o = runner()
+                b = time.time()
+                if not isinstance(o, Exception):
+                    deltas.append(b - a)
+            tmean = jnp.mean(jnp.array(deltas))
+            out[Q.__name__] = float(tmean) / 10000 * 1e6
+            print(Q.__name__.ljust(20), tmean, 'seconds')
+        except Exception as ex:
+            print(ex)
     return out
 
 def plot_sim(n):

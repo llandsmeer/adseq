@@ -90,6 +90,12 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
     return np.mean(np.array(runs)) / stream.shape[1] * 1e6
 
 check = [
+    implementations.BinaryHeap.sized(2),
+    implementations.BinaryHeap.sized(3),
+    implementations.BinaryHeap.sized(4),
+    implementations.BinaryHeap.sized(5),
+    implementations.BinaryHeap.sized(6),
+    implementations.BinaryHeap.sized(7),
     implementations.SingleSpike,
     implementations.SingleSpikeKeep,
     implementations.DoNothing,
