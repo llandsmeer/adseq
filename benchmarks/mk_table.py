@@ -36,7 +36,12 @@ def sort_index(x):
                 LossyRing=40,
                 ).get(x, None)
         if o is not None:
-            return o
+
+            try:
+                n = int(x.split('[')[1])
+            except:
+                n = 1
+            return o*100 +  n
         print(x)
         return x
     return x.map(go)
@@ -57,7 +62,7 @@ def add_horizontals(match):
         return ls
     else:
         groups = (len(ls) - 1 + 3) // 4
-        return r'\begin{tabular}{' + 'l|' + '|'.join(['rrrr'] * groups) + '}'
+        return r'\begin{tabular}{\textwidth}{' + 'l|' + '|'.join(['rrrr'] * groups) + '|}'
 
 
 subsets = [
@@ -72,10 +77,10 @@ for subset in subsets:
         print('=='*10, key)
         df = pd.DataFrame(dfs[key])
         pick = {
-            'spectre_jax_cpu': 'CPU',
-            'lennartpc_gpu': 'GPU',
+            'lennartpc_jax_cpu': 'CPU',
+            'henkdenktenk_docker_jax_gpu': 'GPU',
             'nonexistent1': 'TPU',
-            'nonexistent2': 'Groq',
+            'Groqhost1_groq_cpu': 'Groq',
         }
         for k in pick:
             if k not in df.columns:
@@ -102,6 +107,12 @@ for subset in subsets:
             multicolumn_format='c'
             )
     s = header_match.sub(add_horizontals, s)
+    s = s.replace('toprule', 'hline')
+    s = s.replace('midrule', 'hline')
+    s = s.replace('bottomrule', 'hline')
+    s = s.replace('{tabular}', '{tabularx}')
+    s = s.replace('{c}', '{|c|}')
+    s = s.replace('_', '')
     print()
     print(s)
     print()

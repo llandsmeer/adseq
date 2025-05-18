@@ -40,7 +40,11 @@ def get_device_id():
          jax_version=jax_version,
          backend=BACKEND
          )
-    return f'{hostname}_{device}_{BACKEND}', o
+    key =f'{hostname}_{device}_{BACKEND}'
+    print('##########################')
+    print(key)
+    print('##########################')
+    return key, o
 
 def _convert_to_tf(f, x, names=None):
     import tensorflow as tf
