@@ -46,7 +46,7 @@ qs = [
     implementations.Ring,
     ]
 
-def benchmark_regular(n=100):
+def benchmark_regular(n=32):
     key = jax.random.PRNGKey(0)
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
     out = {}
@@ -64,7 +64,7 @@ def benchmark_regular(n=100):
         print(Q.__name__.ljust(20), tmean, 'seconds')
     return out
 
-def benchmark_grad(jac=jax.jacfwd, n=100):
+def benchmark_grad(jac=jax.jacfwd, n=32):
     key = jax.random.PRNGKey(0)
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
     out = {}
@@ -87,7 +87,7 @@ def benchmark_grad(jac=jax.jacfwd, n=100):
     return out
 
 def plot_sim(n):
-    'plot_sim(100)'
+    'plot_sim(32)'
     ts, (trace, spikes) = sim(n)
     plt.plot(ts, spikes.sum(1))
     plt.ylim(0, 30)
