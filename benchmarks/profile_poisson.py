@@ -48,7 +48,9 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
     runner = benchmarks.mkrunner_loop(
             f_loop,
             init=(QueueT.init(delay), 0),
-            xs=stream)
+            xs=stream,
+            groq_unroll=100
+            )
     runs = []
     for _ in range(NREPEATS):
         a = time.time()
@@ -80,7 +82,9 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
     runner = benchmarks.mkrunner_loop(
             f_loop,
             init=(init, 0),
-            xs=stream.T)
+            xs=stream.T,
+            groq_unroll=20
+            )
     runs = []
     for _ in range(NREPEATS):
         a = time.time()
