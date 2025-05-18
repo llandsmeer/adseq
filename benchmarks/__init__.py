@@ -87,7 +87,8 @@ def mkrunner_groq(f, x):
     assert 0 == os.system('iop-utils stats /tmp/runner.iop')
     program = tsp.create_tsp_runner('/tmp/runner.iop')
     x_np = np.array(x)
-    return lambda: program(x=x_np)
+    k = next(iter(program(x=x_np).keys()))
+    return lambda: program(x=x_np)[k]
 
 def mkrunner_openvino(f, x):
     import openvino as ov
