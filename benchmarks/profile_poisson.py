@@ -9,9 +9,11 @@ import matplotlib.pyplot as plt
 
 NREPEATS = 1
 
+print(__file__)
+
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-os.chdir(os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # jax.config.update('jax_platform_name', 'cpu')
 
 import implementations
