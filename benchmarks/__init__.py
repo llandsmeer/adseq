@@ -193,7 +193,7 @@ def mkrunner_onnx_loop(f_loop, init, xs, unroll=10):
             return ex
     return runner
 
-def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
+def mkrunner_groq_loop(f_loop, init, xs, unroll=100):
     from groq.runner import tsp
     structure = jax.tree.structure(init)
     def f_loop_unroll(*args):
@@ -210,6 +210,7 @@ def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
     init_np = tuple(np.array(x) for x in jax.tree.flatten(init)[0])
     names = ['C'+str(i) for i in range(len(init_np))] + ['i', 'x']
     _convert_to_onnx(f_loop_unroll, sample, names=names)
+    breakpoint()
     assert 0 == os.system('groq-compiler -o /tmp/runner /tmp/runner.onnx')
     assert 0 == os.system('aa-latest --name runner -i /tmp/runner.aa --output-iop /tmp/runner.iop')
     assert 0 == os.system('iop-utils stats /tmp/runner.iop')
