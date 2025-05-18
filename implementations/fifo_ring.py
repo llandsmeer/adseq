@@ -38,7 +38,7 @@ def _enqueue(self, n):
     cap = self.buffer.shape[0]
     do_insert = self.size < cap
     return FIFORing(
-       jax.lax.select(do_insert, self.buffer.at[(self.head + self.size) % cap].set(n), self.buffer),
+       jax.lax.select(do_insert, self.buffer.at[(self.head + self.size) % cap].set(n, mode='promise_in_bounds'), self.buffer),
        self.head,
        jax.lax.select(do_insert, self.size+1, self.size)
        )
@@ -49,11 +49,11 @@ def _enqueue_jvp(primals, tangents):
     cap = self.buffer.shape[0]
     do_insert = self.size < cap
     return FIFORing(
-               jax.lax.select(do_insert, self.buffer.at[(self.head + self.size) % cap].set(n), self.buffer),
+               jax.lax.select(do_insert, self.buffer.at[(self.head + self.size) % cap].set(n, mode='promise_in_bounds'), self.buffer),
                self.head,
                jax.lax.select(do_insert, self.size+1, self.size)
        ),  FIFORing(
-               jax.lax.select(do_insert, self_t.buffer.at[(self.head + self.size) % cap].set(n_t), self_t.buffer),
+               jax.lax.select(do_insert, self_t.buffer.at[(self.head + self.size) % cap].set(n_t, mode='promise_in_bounds'), self_t.buffer),
                self_t.head,
                self_t.size
        )
@@ -62,9 +62,9 @@ del _enqueue_jvp
 @jax.custom_jvp
 def _pop(self, n):
     cap = self.buffer.shape[0]
-    hit = self.buffer[self.head] <= n
+    hit = self.buffer.at[self.head].get(mode='promise_in_bounds') <= n
     return FIFORing(
-       jax.lax.select(hit, self.buffer.at[self.head].set(INT_MAX), self.buffer),
+       jax.lax.select(hit, self.buffer.at[self.head].set(INT_MAX, mode='promise_in_bounds'), self.buffer),
        jax.lax.select(hit, (self.head+1) % cap, self.head),
        jax.lax.select(hit, self.size-1, self.size)
        ), hit.astype(self.buffer.dtype)
@@ -75,14 +75,14 @@ def _pop_jvp(primals, tangents):
     self_t, n_t = tangents
     del n_t
     cap = self.buffer.shape[0]
-    hit = self.buffer[self.head] <= n
+    hit = self.buffer.at[self.head].get(mode='promise_in_bounds') <= n
     return (FIFORing(
-               jax.lax.select(hit, self.buffer.at[self.head].set(INT_MAX), self.buffer),
+               jax.lax.select(hit, self.buffer.at[self.head].set(INT_MAX, mode='promise_in_bounds'), self.buffer),
                jax.lax.select(hit, (self.head+1) % cap, self.head),
                jax.lax.select(hit, self.size-1, self.size)
        ), hit.astype(self.buffer.dtype)), (
            FIFORing(
-               jax.lax.select(hit, self_t.buffer.at[self.head].set(INT_MAX), self_t.buffer),
+               jax.lax.select(hit, self_t.buffer.at[self.head].set(INT_MAX, mode='promise_in_bounds'), self_t.buffer),
                self_t.head,
                self_t.size
        ), self_t.buffer[self.head])

@@ -42,9 +42,27 @@ def get_device_id():
          )
     return f'{hostname}_{device}_{BACKEND}', o
 
+def _gather_for_scalar_indexing(args):
+  import tensorflow as tf
+  from jax.experimental.jax2tf import jax2tf
+  indices = tf.expand_dims(args.dnums.start_index_map, 1)
+  op_shape = jax2tf._eval_shape(args.op_shape)
+  slice_sizes_tf = jax2tf._eval_shape(args.slice_sizes)
+  begin = tf.scatter_nd(indices, args.start_indices, [len(op_shape)])
+  if slice_sizes_tf == (1,) and len(op_shape) == 1:
+      # XXX HAD TO PUT THIS TO MAKE SHAPES STATIC :(
+      return tf.gather(args.operand, begin)[0]
+  begin = _clip(op_shape, begin, slice_sizes_tf)
+  end = slice_sizes_tf + begin
+  shrink_mask = sum(2**x for x in args.dnums.collapsed_slice_dims)
+  res = tf.strided_slice(args.operand, begin, end, shrink_axis_mask=shrink_mask)
+  raise Exception("res has dynamic shape")
+  return res
+
 def _convert_to_tf(f, x, names=None):
     import tensorflow as tf
     from jax.experimental import jax2tf
+    jax2tf.impl_no_xla._gather_for_scalar_indexing = _gather_for_scalar_indexing
     f_tf = jax2tf.convert(f, native_serialization=False, enable_xla=False)
     if isinstance(x, tuple):
         sig = [tf.TensorSpec(
@@ -53,7 +71,13 @@ def _convert_to_tf(f, x, names=None):
             name=f'x{i}' if names is None else names[i]) for i, x in enumerate(x)] # type: ignore
     else:
         sig = [tf.TensorSpec(x.shape, x.dtype, name='x')] # type: ignore
-    f_tf = tf.function(f_tf, input_signature=sig, jit_compile=False, autograph=False)
+    f_tf = tf.function(f_tf,
+            input_signature=sig,
+            jit_compile=False,
+            autograph=False,
+            reduce_retracing=False,
+
+            )
     return f_tf, sig
 
 def _convert_to_onnx(f, x, fn='/tmp/runner.onnx', opset=16, names=None):
@@ -62,7 +86,11 @@ def _convert_to_onnx(f, x, fn='/tmp/runner.onnx', opset=16, names=None):
     # return to_onnx(f, x)
     import tf2onnx
     f_tf, sig = _convert_to_tf(f, x, names)
-    onnx = tf2onnx.convert.from_function(f_tf, input_signature=sig, output_path=fn, opset=opset)
+    onnx = tf2onnx.convert.from_function(
+            f_tf,
+            input_signature=sig,
+            output_path=fn,
+            opset=opset)
     return onnx
 
 def mkrunner_jax(f, x):
@@ -191,27 +219,6 @@ def mkrunner_onnx_loop(f_loop, init, xs, unroll=10):
 
 def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
     assert xs.shape[0] % unroll == 0
-    from groq.runner import tsp
-    structure = jax.tree.structure(init)
-    def f_loop_unroll(*args):
-        carry_in = structure.unflatten([args[i] for i in range(len(args)-2)])
-        i = args[-2]
-        x = args[-1]
-        carry, out = jax.lax.scan(f_loop,
-                carry_in, (i, x), unroll=unroll)
-        del out
-        carry = jax.tree.flatten(carry)[0]
-        return { str(i): x for i, x in enumerate(carry) }
-    sample = tuple(jax.tree.flatten(init)[0]) + (jnp.arange(unroll, dtype='int32'), xs[0:unroll])
-    sample = tuple(np.array(x) for x in sample)
-    init_np = tuple(np.array(x) for x in jax.tree.flatten(init)[0])
-    names = ['C'+str(i) for i in range(len(init_np))] + ['i', 'x']
-    _convert_to_onnx(f_loop_unroll, sample, names=names)
-    assert 0 == os.system('groq-compiler -o /tmp/runner /tmp/runner.onnx')
-    assert 0 == os.system('aa-latest --name runner -i /tmp/runner.aa --output-iop /tmp/runner.iop')
-    assert 0 == os.system('iop-utils stats /tmp/runner.iop')
-    program = tsp.create_tsp_runner('/tmp/runner.iop')
-
     def recast(x):
         dt = str(x.dtype)
         if dt == 'int64':
@@ -221,6 +228,30 @@ def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
         if dt == 'bool':
             return x.astype('int8')
         return x
+    from groq.runner import tsp
+    structure = jax.tree.structure(init)
+    def f_loop_unroll(*args):
+        carry_in = structure.unflatten([args[i] for i in range(len(args)-2)])
+        i = args[-2]
+        x = args[-1]
+        if unroll == 1:
+            # o = jax.make_jaxpr(f_loop)(carry_in, (i[0], x[0]))
+            carry, out = f_loop(carry_in, (i[0], x[0]))
+        else:
+            carry, out = jax.lax.scan(f_loop,
+                    carry_in, (i, x), unroll=True)
+        del out
+        carry = jax.tree.flatten(carry)[0]
+        return { str(i): x for i, x in enumerate(carry) }
+    sample = tuple(jax.tree.flatten(init)[0]) + (jnp.arange(unroll, dtype='int32'), xs[0:unroll])
+    sample = tuple(recast(np.array(x)) for x in sample)
+    init_np = tuple(recast(np.array(x)) for x in jax.tree.flatten(init)[0])
+    names = ['C'+str(i) for i in range(len(init_np))] + ['i', 'x']
+    _convert_to_onnx(f_loop_unroll, sample, names=names)
+    assert 0 == os.system('groq-compiler -o /tmp/runner /tmp/runner.onnx')
+    assert 0 == os.system('aa-latest --name runner -i /tmp/runner.aa --output-iop /tmp/runner.iop')
+    assert 0 == os.system('iop-utils stats /tmp/runner.iop')
+    program = tsp.create_tsp_runner('/tmp/runner.iop')
     init_groq = { 'C'+str(i): recast(x) for i, x in enumerate(init_np) }
     def runner(xs=xs):
         try:
