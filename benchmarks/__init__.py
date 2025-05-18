@@ -49,12 +49,22 @@ def _gather_for_scalar_indexing(args):
   op_shape = jax2tf._eval_shape(args.op_shape)
   slice_sizes_tf = jax2tf._eval_shape(args.slice_sizes)
   begin = tf.scatter_nd(indices, args.start_indices, [len(op_shape)])
+  end = slice_sizes_tf + begin
+  shrink_mask = sum(2**x for x in args.dnums.collapsed_slice_dims)
   if slice_sizes_tf == (1,) and len(op_shape) == 1:
       # XXX HAD TO PUT THIS TO MAKE SHAPES STATIC :(
       return tf.gather(args.operand, begin)[0]
+  if slice_sizes_tf[-1] == 1 and \
+      slice_sizes_tf[0] == op_shape[0] and \
+      len(slice_sizes_tf) == 2 and \
+      len(op_shape) == 2 and \
+      begin.shape == (2,) and \
+      shrink_mask == 2:
+      # this corresponds to array[0:array.shape[0]-1,idx]
+      return tf.gather(args.operand, begin[1], axis=1)
+      # return  tf.gather(args.operand, begin, axis=1)
+  breakpoint()
   begin = _clip(op_shape, begin, slice_sizes_tf)
-  end = slice_sizes_tf + begin
-  shrink_mask = sum(2**x for x in args.dnums.collapsed_slice_dims)
   res = tf.strided_slice(args.operand, begin, end, shrink_axis_mask=shrink_mask)
   raise Exception("res has dynamic shape")
   return res
