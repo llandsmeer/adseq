@@ -55,6 +55,7 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
         o = runner()
         b = time.time()
         if isinstance(o, Exception):
+            print(QueueT)
             print(repr(o))
         else:
             runs.append(b-a)
@@ -122,18 +123,34 @@ def run():
             }
     dev_name, results['host'] = benchmarks.get_device_id()
     print('Single')
-    times = [time_queue_single(imp) for imp in tqdm.tqdm(check)]
-    for t, imp in sorted(zip(times, check)):
+    times = []
+    finished = []
+    for imp in tqdm.tqdm(check):
+        print('###', imp.__name__)
+        try:
+            times.append(time_queue_single(imp))
+            finished.append(imp)
+        except Exception as ex:
+            print(repr(ex))
+    assert len(times) == len(finished)
+    for t, imp in sorted(zip(times, finished)):
         print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
         results['single'][str(imp.__name__)] = float(t)
     print()
     print('Batched')
     times = []
+    finished = []
     for imp in (bar := tqdm.tqdm(check)):
-        t = time_queue_batched(imp)
-        print(' (prelim)', imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
-        times.append(t)
-    for t, imp in sorted(zip(times, check), key=lambda x:x[0]):
+        print('###', imp.__name__)
+        try:
+            t = time_queue_batched(imp)
+            print(' (prelim)', imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+            times.append(t)
+            finished.append(imp)
+        except Exception as ex:
+            print(repr(ex))
+    assert len(times) == len(finished)
+    for t, imp in sorted(zip(times, finished), key=lambda x:x[0]):
         print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
         results['batched'][str(imp.__name__)] = float(t)
     with open(f'benchmarks/{dev_name}.json', 'w') as f:

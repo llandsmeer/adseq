@@ -87,7 +87,8 @@ def mkrunner_groq(f, x):
     assert 0 == os.system('iop-utils stats /tmp/runner.iop')
     program = tsp.create_tsp_runner('/tmp/runner.iop')
     x_np = np.array(x)
-    return lambda: program(x=x_np)
+    k = next(iter(program(x=x_np).keys()))
+    return lambda: program(x=x_np)[k]
 
 def mkrunner_openvino(f, x):
     import openvino as ov
@@ -147,6 +148,7 @@ def mkrunner(f, x):
         case 'groq':   return mkrunner_groq(f, x)
         case 'onnxrt': return mkrunner_onnx(f, x)
         case 'openvino': return mkrunner_openvino(f, x)
+    raise Exception('backend not found')
 
 def mkrunner_onnx_loop(f_loop, init, xs, unroll=10):
     import onnxruntime as rt
@@ -181,7 +183,7 @@ def mkrunner_onnx_loop(f_loop, init, xs, unroll=10):
                 carry['x'] = x
                 carry['i'] = i
                 carry = sess.run(None, carry)
-                carry = { 'C'+str(i): x for i, x in enumerate(init_np) }
+                carry = { 'C'+str(i): x for i, x in enumerate(carry) }
             return carry
         except Exception as ex:
             return ex
@@ -199,7 +201,7 @@ def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
         del out
         carry = jax.tree.flatten(carry)[0]
         return { str(i): x for i, x in enumerate(carry) }
-    sample = tuple(jax.tree.flatten(init)[0]) + (jnp.arange(unroll), xs[0:unroll])
+    sample = tuple(jax.tree.flatten(init)[0]) + (jnp.arange(unroll, dtype='int32'), xs[0:unroll])
     sample = tuple(np.array(x) for x in sample)
     init_np = tuple(np.array(x) for x in jax.tree.flatten(init)[0])
     names = ['C'+str(i) for i in range(len(init_np))] + ['i', 'x']
@@ -208,19 +210,31 @@ def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
     assert 0 == os.system('aa-latest --name runner -i /tmp/runner.aa --output-iop /tmp/runner.iop')
     assert 0 == os.system('iop-utils stats /tmp/runner.iop')
     program = tsp.create_tsp_runner('/tmp/runner.iop')
+
+    def recast(x):
+        dt = str(x.dtype)
+        if dt == 'int64':
+            return x.astype('int32')
+        if dt == 'float64':
+            return x.astype('float32')
+        if dt == 'bool':
+            return x.astype('int8')
+        return x
+    init_groq = { 'C'+str(i): recast(x) for i, x in enumerate(init_np) }
     def runner(xs=xs):
         try:
-            carry = { 'C'+str(i): x for i, x in enumerate(init_np) }
+            carry = init_groq
             xs = np.array(xs)
             for i in range(0, len(xs), unroll):
                 x = xs[i:i+unroll]
                 i = np.arange(i, i+unroll, dtype='int32')
                 carry['x'] = x
                 carry['i'] = i
-                carry = program(**carry)
-                carry = { 'C'+str(i): x for i, x in enumerate(init_np) }
+                carry = { 'C' + k: v for k, v in program(**carry).items() }
             return carry
         except Exception as ex:
+            if 'BufferMismatchException' in repr(ex):
+                breakpoint()
             return ex
     return runner
 
