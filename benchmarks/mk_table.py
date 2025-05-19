@@ -122,7 +122,7 @@ for subset in subsets:
     s = s.replace('midrule', 'hline')
     s = s.replace('bottomrule', 'hline')
     s = s.replace('{tabular}', '{tabularx}')
-    s = s.replace('{c}', '{|c|}')
+    s = s.replace('{c}', '{c|}')
     s = s.replace('_', '')
     print()
     print(s)
