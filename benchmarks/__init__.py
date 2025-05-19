@@ -22,9 +22,9 @@ def estimate_backend():
     else:
         return 'jax'
 
-BACKEND: typing.Literal['jax', 'onnxrt', 'groq', 'openvino'] = estimate_backend()
+BACKEND: typing.Literal['jax', 'onnxrt', 'groq', 'openvino', 'stablehlo'] = estimate_backend()
 
-def set_backend(backend: typing.Literal['jax', 'onnxrt', 'groq', 'openvino']):
+def set_backend(backend: typing.Literal['jax', 'onnxrt', 'groq', 'openvino', 'stablehlo']):
     global BACKEND
     BACKEND = backend
 
@@ -146,12 +146,19 @@ def mkrunner_openvino_loop(f_loop, init, xs, unroll=1000):
             return ex
     return runner
 
-def mkrunner(f, x):
+def mkrunner_stablehlo(f, x, tag=None):
+    # not an actual runner
+    assert tag is not None
+    def runner():
+        raise NotImplementedError('stablehlo')
+
+def mkrunner(f, x, tag=None):
     match BACKEND:
         case 'jax':    return mkrunner_jax(f, x)
         case 'groq':   return mkrunner_groq(f, x)
         case 'onnxrt': return mkrunner_onnx(f, x)
         case 'openvino': return mkrunner_openvino(f, x)
+        case 'stablehlo': return mkrunner_stablehlo(f, x)
     raise Exception('backend not found')
 
 def mkrunner_onnx_loop(f_loop, init, xs, unroll=10):
@@ -253,5 +260,5 @@ def mkrunner_loop(f_loop, init, xs, **kwargs):
             init=init,
             xs=(jnp.arange(len(stream)), stream)
             )[0][1]
-    return mkrunner(f, xs)
+    return mkrunner(f, xs, tag=kwargs.get('tag', None))
 
