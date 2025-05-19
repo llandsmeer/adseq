@@ -5,6 +5,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# DoNothing             0.4269660us/ts
+# SingleSpikeKeep       0.6850600us/ts
+# SingleSpike           0.9564519us/ts
+# LossyRing[4]          1.1763394us/ts
+# LossyRing[2]          1.3531685us/ts
+# Ring                  1.7534256us/ts
+# FIFORing[2]           3.5003304us/ts
+# FIFORing[4]           3.5167098us/ts
+# FIFORing[8]           3.5546422us/ts
+
+
 fns = glob.glob('*.json')
 
 experiments = 'single batched regular forward reverse'.split()
@@ -23,25 +34,25 @@ for fn in fns:
 
 def sort_index(x):
     def go(x):
-        x = x.split('[')[0]
+        x, *q = x.split('[')
         o = dict(
                 DoNothing=0,
                 Ring=10,
                 FIFORing=50,
                 SortedArray=60,
                 BinaryHeap=100,
-                BGPQ1=1000,
+                BGPQ1=200,
                 SingleSpike=20,
                 SingleSpikeKeep=30,
                 LossyRing=40,
                 ).get(x, None)
         if o is not None:
-
             try:
-                n = int(x.split('[')[1])
-            except:
+                n = int(q[0].split(']')[0])
+            except Exception as ex:
+                print(ex)
                 n = 1
-            return o*100 +  n
+            return o*10000 +  n
         print(x)
         return x
     return x.map(go)
