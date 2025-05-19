@@ -184,9 +184,42 @@ def mkrunner_openvino_loop(f_loop, init, xs, unroll=1000):
             return ex
     return runner
 
+def build_tag():
+    import inspect
+    # oh well
+    stack = inspect.stack()
+    seen = False
+    target = None
+    for i in range(len(stack)):
+        f = stack[i].function
+        if not seen:
+            if f.startswith('mkrunner'):
+                seen = True
+        else:
+            if not f.startswith('mkrunner'):
+                target = stack[i]
+                break
+    assert target is not None
+    args = [target.function]
+    getargs = inspect.getargvalues(target.frame)
+    for a in getargs.args:
+        q = getargs.locals[a]
+        nm = getattr(q, '__name__', repr(q))
+        nm = nm.replace('[', '_')
+        nm = nm.replace(']', '')
+        args.append(nm)
+    assert getargs.varargs is None
+    assert getargs.keywords is None
+    args = '_'.join(args)
+    return args
+
 def mkrunner_stablehlo(f, x, tag=None):
     # not an actual runner
-    assert tag is not None
+    if tag is None:
+        tag = build_tag()
+    mlir = jax.jit(f).lower(x).as_text()
+    with open(f'hls/{tag}.stablehlo.mlir', 'w') as f:
+        print(mlir, file=f)
     def runner():
         raise NotImplementedError('stablehlo')
 
