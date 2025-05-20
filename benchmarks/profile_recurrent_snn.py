@@ -24,29 +24,27 @@ def main():
             'reverse': {}
             }
     dev_name, results['host'] = benchmarks.get_device_id()
-    print('=== regular ===')
-    results['regular'].update(benchmark_regular())
+    # print('=== regular ===')
+    # results['regular'].update(benchmark_regular())
     print('=== forward ===')
     results['forward'].update(benchmark_grad(jax.jacfwd))
     print('=== reverse ===')
     results['reverse'].update(benchmark_grad(jax.jacrev))
-    with open(f'benchmarks/{dev_name}_grad.json', 'w') as f:
-        json.dump(results, f)
+    # with open(f'benchmarks/{dev_name}_grad.json', 'w') as f:
+    #     json.dump(results, f)
 
 qs = [
     implementations.DoNothing,
+    implementations.Ring,
     implementations.SingleSpike,
     implementations.SingleSpikeKeep,
-    implementations.FIFORing.sized(2),
-    implementations.FIFORing.sized(3),
     implementations.FIFORing.sized(4),
-    implementations.SortedArray.sized(2),
-    implementations.SortedArray.sized(3),
+    #implementations.LossyRing.sized(4),
     implementations.SortedArray.sized(4),
-    implementations.Ring,
+    #implementations.BinaryHeap.sized(7),
     ]
 
-def benchmark_regular(n=32):
+def benchmark_regular(n=100):
     key = jax.random.PRNGKey(0)
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
     out = {}
@@ -60,11 +58,12 @@ def benchmark_regular(n=32):
             b = time.time()
             deltas.append(b - a)
         tmean = jnp.mean(jnp.array(deltas))
-        out[Q.__name__] = float(tmean) / 10000 * 1e6
-        print(Q.__name__.ljust(20), tmean, 'seconds')
+        tmean = float(tmean) / 10000 * 1e6
+        out[Q.__name__] = tmean
+        print(Q.__name__.ljust(20), tmean, 'us')
     return out
 
-def benchmark_grad(jac=jax.jacfwd, n=32):
+def benchmark_grad(jac=jax.jacfwd, n=100):
     key = jax.random.PRNGKey(0)
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
     out = {}
@@ -80,8 +79,9 @@ def benchmark_grad(jac=jax.jacfwd, n=32):
                 if not isinstance(o, Exception):
                     deltas.append(b - a)
             tmean = jnp.mean(jnp.array(deltas))
-            out[Q.__name__] = float(tmean) / 10000 * 1e6
-            print(Q.__name__.ljust(20), tmean, 'seconds')
+            tmean = float(tmean) / 10000 * 1e6
+            out[Q.__name__] = tmean
+            print(Q.__name__.ljust(20), tmean, 'us')
         except Exception as ex:
             print(ex)
     return out
@@ -111,10 +111,10 @@ def sim(
     key = jax.random.PRNGKey(0)
     if weight is None:
         weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
-    delays = 4 + .5*jax.random.normal(key, (n,))
+    delays = 4 + .5*jax.random.normal(key, (n,n)).flatten()
     syn = synapse.mk_synapses(Q, # type: ignore
           delay_ms=delays, dt_ms=dt,
-          vthres=vthres, tau_syn_ms=tau_syn, n=n,
+          vthres=vthres, tau_syn_ms=tau_syn, n=n*n,
           max_delay_ms=7
           )
     syn_step = jax.jit(type(syn).timestep_spike_detect_pre)
@@ -122,11 +122,14 @@ def sim(
     state = v, syn
     def step(state, t):
         v, syn = state
-        isyn = (weight @ jnp.roll(syn.isyn, 1)).at[:].add(1. * (t < 2))
+        isyn = (weight @ jnp.roll(syn.isyn.reshape((n,n)).sum(0), 1)).at[:].add(1. * (t < 2))
         # ring:
         # isyn = (weight * jnp.roll(syn.isyn, 1)).at[0].add(1. * (t < 2))
         vnext, s = lif_step(v, isyn, tau_mem, dt, vthres)
-        syn = syn_step(syn, ts=t, v=v, vnext=vnext)
+        syn = syn_step(syn,
+                       ts=t,
+                       v=jnp.repeat(v, n),
+                       vnext=jnp.repeat(vnext, n))
         state = vnext, syn
         return state, (v, s)
     ts = jnp.arange(10000) * dt

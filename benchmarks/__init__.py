@@ -335,16 +335,25 @@ def mkrunner_stablehlo_loop(f_loop, init, xs, tag=None):
     def runner():
         raise NotImplementedError('stablehlo')
 
-def mkrunner_loop(f_loop, init, xs, **kwargs):
+def mkrunner_loop(f_loop, init, xs=None, length=None, **kwargs):
+    assert (xs is None) != (length is None)
     match BACKEND:
         case 'openvino': return mkrunner_openvino_loop(f_loop, init, xs)
         case 'onnxrt': return mkrunner_onnx_loop(f_loop, init, xs)
         case 'groq': return mkrunner_groq_loop(f_loop, init, xs, unroll=kwargs.get('groq_unroll', None))
         case 'stablehlo': return mkrunner_stablehlo_loop(f_loop, init, xs, tag=kwargs.get('tag', None))
-    f = lambda stream:jax.lax.scan(
-            f=f_loop, # type: ignore
-            init=init,
-            xs=(jnp.arange(len(stream)), stream)
-            )[0][1]
-    return mkrunner(f, xs, tag=kwargs.get('tag', None))
+    if length is None:
+        f = lambda stream:jax.lax.scan(
+                f=f_loop, # type: ignore
+                init=init,
+                xs=(jnp.arange(len(stream)), stream)
+                )[0][1]
+        return mkrunner(f, xs, tag=kwargs.get('tag', None))
+    else:
+        f = lambda init:jax.lax.scan(
+                f=f_loop, # type: ignore
+                init=init,
+                length=length
+                )[0][1]
+        return mkrunner(f, init, tag=kwargs.get('tag', None))
 

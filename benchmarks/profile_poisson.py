@@ -69,20 +69,22 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
     delay = 80 # 2 ms
     Nevents = 100
     num = 10000
-    stream = mkevs(lam, Nevents, num)
+    key = jax.random.PRNGKey(0)
     @jax.jit
-    def f_loop(carry, arg):
-        qs, total = carry
-        t, evs = arg
+    def f_loop(carry, _):
+        del _
+        qs, total, key, t = carry
+        key, key_next = jax.random.split(key)
+        evs = jax.random.uniform(key, shape=(num,)) < 1 / lam
         queue, out = jax.vmap(lambda q: q.pop(t))(qs)
         queue = jax.vmap(lambda e, q: jax.lax.cond(e, lambda: q.enqueue(t + delay), lambda: q))(evs, qs)
         total = total + out.sum()
-        return (queue, total), None
+        return (queue, total, key_next, t + 1), None
     init = jax.vmap(lambda _: QueueT.init(delay))(jnp.full(num, 0)) # type: ignore
     runner = benchmarks.mkrunner_loop(
             f_loop,
-            init=(init, 0),
-            xs=stream.T,
+            init=(init, 0, key, 0),
+            length=Nevents * lam,
             groq_unroll=20
             )
     runs = []
@@ -94,29 +96,29 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
             print(repr(o))
         else:
             runs.append(b-a)
-    return np.mean(np.array(runs)) / stream.shape[1] * 1e6
+    return np.mean(np.array(runs)) / (Nevents * lam) * 1e6
 
 check = [
-    implementations.BinaryHeap.sized(2),
-    implementations.BinaryHeap.sized(3),
-    implementations.BinaryHeap.sized(4),
-    implementations.BinaryHeap.sized(5),
-    implementations.BinaryHeap.sized(6),
+    #implementations.BinaryHeap.sized(2),
+    #implementations.BinaryHeap.sized(3),
     implementations.BinaryHeap.sized(7),
+    #implementations.BinaryHeap.sized(5),
+    #implementations.BinaryHeap.sized(6),
+    #implementations.BinaryHeap.sized(7),
     implementations.SingleSpike,
     implementations.SingleSpikeKeep,
     implementations.DoNothing,
     implementations.Ring,
-    implementations.LossyRing.sized(2),
+    #implementations.LossyRing.sized(2),
     implementations.LossyRing.sized(4),
-    implementations.LossyRing.sized(100),
-    implementations.FIFORing.sized(2),
+    #implementations.LossyRing.sized(100),
+    #implementations.FIFORing.sized(2),
     implementations.FIFORing.sized(4),
-    implementations.FIFORing.sized(8),
-    implementations.FIFORing.sized(100),
-    implementations.SortedArray.sized(2),
+    #implementations.FIFORing.sized(8),
+    #implementations.FIFORing.sized(100),
+    #implementations.SortedArray.sized(2),
     implementations.SortedArray.sized(4),
-    implementations.SortedArray.sized(8),
+    #implementations.SortedArray.sized(8),
     implementations.BGPQ1,
 ]
 
@@ -126,21 +128,21 @@ def run():
             'batched': {}
             }
     dev_name, results['host'] = benchmarks.get_device_id()
-    print('Single')
-    times = []
-    finished = []
-    for imp in tqdm.tqdm(check):
-        print('###', imp.__name__)
-        try:
-            times.append(time_queue_single(imp))
-            finished.append(imp)
-        except Exception as ex:
-            print(repr(ex))
-    assert len(times) == len(finished)
-    for t, imp in sorted(zip(times, finished)):
-        print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
-        results['single'][str(imp.__name__)] = float(t)
-    print()
+    # print('Single')
+    # times = []
+    # finished = []
+    # for imp in tqdm.tqdm(check):
+    #     print('###', imp.__name__)
+    #     try:
+    #         times.append(time_queue_single(imp))
+    #         finished.append(imp)
+    #     except Exception as ex:
+    #         print(repr(ex))
+    # assert len(times) == len(finished)
+    # for t, imp in sorted(zip(times, finished)):
+    #     print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+    #     results['single'][str(imp.__name__)] = float(t)
+    # print()
     print('Batched')
     times = []
     finished = []
