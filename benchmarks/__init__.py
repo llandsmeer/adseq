@@ -316,7 +316,8 @@ def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
                 i = np.arange(i, i+unroll, dtype='int32')
                 carry['x'] = x
                 carry['i'] = i
-                carry = { 'C' + k: v for k, v in program(**carry).items() }
+                groq_result = program(**carry)
+                carry = { 'C' + k: v for k, v in groq_result.items() }
             return carry
         except Exception as ex:
             if 'BufferMismatchException' in repr(ex):
@@ -324,11 +325,22 @@ def mkrunner_groq_loop(f_loop, init, xs, unroll=10):
             return ex
     return runner
 
+def mkrunner_stablehlo_loop(f_loop, init, xs, tag=None):
+    # not an actual runner
+    if tag is None: tag = build_tag()
+    x0 = jnp.array(0, dtype='int32'), xs[0]
+    mlir = jax.jit(f_loop).lower(init, x0).as_text()
+    with open(f'hls/single_iteration_{tag}.stablehlo.mlir', 'w') as f:
+        print(mlir.replace('@main(', '@forward('), file=f)
+    def runner():
+        raise NotImplementedError('stablehlo')
+
 def mkrunner_loop(f_loop, init, xs, **kwargs):
     match BACKEND:
         case 'openvino': return mkrunner_openvino_loop(f_loop, init, xs)
         case 'onnxrt': return mkrunner_onnx_loop(f_loop, init, xs)
         case 'groq': return mkrunner_groq_loop(f_loop, init, xs, unroll=kwargs.get('groq_unroll', None))
+        case 'stablehlo': return mkrunner_stablehlo_loop(f_loop, init, xs, tag=kwargs.get('tag', None))
     f = lambda stream:jax.lax.scan(
             f=f_loop, # type: ignore
             init=init,

@@ -68,7 +68,7 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
     lam = 400 # 100 Hz
     delay = 80 # 2 ms
     Nevents = 100
-    num = 1000
+    num = 10000
     stream = mkevs(lam, Nevents, num)
     @jax.jit
     def f_loop(carry, arg):
