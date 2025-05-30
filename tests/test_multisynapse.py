@@ -15,6 +15,8 @@ check = [
     implementations.Ring,
     implementations.FIFORing,
     implementations.SortedArray,
+    implementations.BinaryHeap.sized(5),
+    implementations.LossyRing.sized(5),
     ]
 
 @pytest.mark.parametrize("Q", check)

@@ -24,6 +24,8 @@ check = [
     implementations.Ring,
     implementations.FIFORing,
     implementations.SortedArray,
+    implementations.BinaryHeap.sized(7),
+    implementations.LossyRing.sized(8),
     ]
 
 

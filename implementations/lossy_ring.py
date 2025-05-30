@@ -2,7 +2,6 @@ import jax
 import jax.numpy as jnp
 import functools
 import typing
-from .ring import Ring
 
 __all__ = 'LossyRing',
 
@@ -11,36 +10,14 @@ INT_MAX = 0x7fffffff
 class LossyRing(typing.NamedTuple):
     buffer: jax.Array
     @classmethod
-    def init(cls, delay, capacity):
+    def init(cls, delay, capacity, grad=False):
         del delay
-        return cls(jnp.full(capacity, INT_MAX, 'int32'))
+        return cls(jnp.full(capacity, INT_MAX,
+            'float32' if grad else 'int32'))
     def enqueue(self, n):
-        cap = self.buffer.shape[0]
-        return LossyRing(self.buffer.at[n % cap].set(n, mode='promise_in_bounds'))
+        return _enqueue(self, n)
     def pop(self, n):
-        # this one broken with the dymnamic slice
-        cap = self.buffer.shape[0]
-        # root = jax.lax.gather(
-        #     self.buffer,
-        #     jnp.array([n%cap]),
-        #     jax.lax.GatherDimensionNumbers(
-        #         offset_dims=(),
-        #         collapsed_slice_dims=(0,),
-        #         start_index_map=(0,)),
-        #     slice_sizes=(1,),
-        #     mode=jax.lax.GatherScatterMode.PROMISE_IN_BOUNDS)
-        root = self.buffer.at[n%cap].get(mode='promise_in_bounds')
-        # root = self.buffer[n%cap]
-        hit = root <= n # HERE ONNX CREATES DYNAMIC SLICE
-        return LossyRing(
-                jax.lax.select(hit,
-                    # jax.lax.scatter(
-                    #     self.buffer,
-                    #     jnp.array([n % cap]),
-                    #     INT_MAX,
-                    #     jax.lax.ScatterDimensionNumbers((), (0,), (0,), (), ())),
-                    self.buffer.at[n % cap].set(INT_MAX, mode='promise_in_bounds'),
-                    self.buffer)), hit.astype(int)
+        return _pop(self, n)
     @classmethod
     def sized(cls, n):
         "wish I could use __class_getitem__"
@@ -48,3 +25,64 @@ class LossyRing(typing.NamedTuple):
                     cls.__bases__,
                     {**cls.__dict__,
                      "init": functools.partial(cls.init, capacity=n)})
+
+@jax.custom_jvp
+def _enqueue(self: LossyRing, n: float):
+    capacity = jnp.asarray(self.buffer.shape[0], dtype='int32')
+    # XXX: THIS IS UGLY BUT GROQ DOES NOT SUPPORT DIVISION BY INT32 :(
+    # NEED TO MAKE IT BACKEND SPECIFIC
+    idx = jnp.asarray(n, dtype='int32') % capacity.astype('float32')
+    idx = idx.astype('int32')
+    return LossyRing(self.buffer.at[idx].set(n, mode='promise_in_bounds'))
+@_enqueue.defjvp
+def _enqueue_grad(primals, tangents):
+    self, n = primals
+    self_t, n_t = tangents
+    capacity = jnp.asarray(self.buffer.shape[0], dtype='int32')
+    # XXX: THIS IS UGLY BUT GROQ DOES NOT SUPPORT DIVISION BY INT32 :(
+    # NEED TO MAKE IT BACKEND SPECIFIC
+    idx = jnp.asarray(n, dtype='int32') % capacity.astype('float32')
+    idx = idx.astype('int32')
+    return LossyRing(self.buffer.at[idx].set(n, mode='promise_in_bounds')), \
+           LossyRing(self_t.buffer.at[idx].set(n_t, mode='promise_in_bounds'))
+del _enqueue_grad
+
+@jax.custom_jvp
+def _pop(self, n):
+    capacity = jnp.asarray(self.buffer.shape[0], dtype='int32')
+    # XXX: THIS IS UGLY BUT GROQ DOES NOT SUPPORT DIVISION BY INT32 :(
+    # NEED TO MAKE IT BACKEND SPECIFIC
+    idx = jnp.asarray(n, dtype='int32') % capacity.astype('float32')
+    idx = idx.astype('int32')
+    root = self.buffer.at[idx].get(mode='promise_in_bounds')
+    hit = root <= n
+    return LossyRing(
+            jax.lax.select(hit,
+                self.buffer.at[idx].set(INT_MAX, mode='promise_in_bounds'),
+                self.buffer)), \
+                hit.astype(self.buffer.dtype)
+
+@_pop.defjvp
+def _pop_grad(primals, tangents):
+    self, n = primals
+    self_t, n_t = tangents
+    del n_t
+    capacity = jnp.asarray(self.buffer.shape[0], dtype='int32')
+    # XXX: THIS IS UGLY BUT GROQ DOES NOT SUPPORT DIVISION BY INT32 :(
+    # NEED TO MAKE IT BACKEND SPECIFIC
+    idx = jnp.asarray(n, dtype='int32') % capacity.astype('float32')
+    idx = idx.astype('int32')
+    root = self.buffer.at[idx].get(mode='promise_in_bounds')
+    hit = root <= n
+    primal_out = LossyRing(
+            jax.lax.select(hit,
+                self.buffer.at[idx].set(INT_MAX, mode='promise_in_bounds'),
+                self.buffer)), \
+                hit.astype(self.buffer.dtype)
+    tangent_out = LossyRing(
+            jax.lax.select(hit,
+                self_t.buffer.at[idx].set(0, mode='promise_in_bounds'),
+                self_t.buffer)), \
+                self_t.buffer.at[idx].get(mode='promise_in_bounds')
+    return primal_out, tangent_out
+del _pop_grad
