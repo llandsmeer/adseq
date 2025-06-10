@@ -44,6 +44,21 @@ qs = [
     #implementations.BinaryHeap.sized(7),
     ]
 
+def memory():
+    n = 100
+    key = jax.random.PRNGKey(0)
+    weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
+    for jac in [jax.jacrev, jax.jacfwd]:
+        print(jac)
+        for Q in qs:
+            try:
+                f = jax.jit(jac(lambda w: sim(n, w, Q=Q)[1][1].sum()))
+                f = jax.jit(f).lower(weight).compile()
+                b = sum(v for k, v in f.cost_analysis().items() if 'bytes' in k)
+            except:
+                pass
+            print(Q.__name__.ljust(20), str(b).rjust(20))
+
 def benchmark_regular(n=100):
     key = jax.random.PRNGKey(0)
     weight = jnp.sqrt(23)/jnp.sqrt(n) * 0.05 * zero_diagonal(jax.random.normal(key, (n,n)))**2
@@ -160,3 +175,4 @@ def zero_diagonal(arr):
 
 if __name__ == '__main__':
     main()
+    memory()

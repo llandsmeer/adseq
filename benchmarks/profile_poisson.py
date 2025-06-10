@@ -7,7 +7,7 @@ import time
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
-NREPEATS = 1
+NREPEATS = 3
 
 print(__file__)
 
@@ -63,12 +63,15 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
             runs.append(b-a)
     return np.mean(np.array(runs)) / stream.shape[0] * 1e6
 
-def time_queue_batched(QueueT: type[implementations.BaseQueue]):
-    # assume dt = 0.025
-    lam = 400 # 100 Hz
-    delay = 80 # 2 ms
-    Nevents = 100
-    num = 10000
+def time_queue_batched(
+        QueueT: type[implementations.BaseQueue],
+        num=10000,
+        nevents=100,
+        # assume dt = 0.025
+        lam = 400, # 100 Hz
+        delay = 80 # 2 ms
+        ):
+    Nevents = nevents
     key = jax.random.PRNGKey(0)
     @jax.jit
     def f_loop(carry, _):
@@ -98,7 +101,13 @@ def time_queue_batched(QueueT: type[implementations.BaseQueue]):
             runs.append(b-a)
     return np.mean(np.array(runs)) / (Nevents * lam) * 1e6
 
+    # implementations.BinaryHeap.sized(7),
+    # implementations.LossyRing.sized(4),
+    # implementations.FIFORing.sized(4),
+    # implementations.SortedArray.sized(4),
+
 check = [
+    implementations.BitArray32,
     #implementations.BinaryHeap.sized(2),
     #implementations.BinaryHeap.sized(3),
     implementations.BinaryHeap.sized(7),
@@ -128,21 +137,21 @@ def run():
             'batched': {}
             }
     dev_name, results['host'] = benchmarks.get_device_id()
-    # print('Single')
-    # times = []
-    # finished = []
-    # for imp in tqdm.tqdm(check):
-    #     print('###', imp.__name__)
-    #     try:
-    #         times.append(time_queue_single(imp))
-    #         finished.append(imp)
-    #     except Exception as ex:
-    #         print(repr(ex))
-    # assert len(times) == len(finished)
-    # for t, imp in sorted(zip(times, finished)):
-    #     print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
-    #     results['single'][str(imp.__name__)] = float(t)
-    # print()
+    print('Single')
+    times = []
+    finished = []
+    for imp in tqdm.tqdm(check):
+        print('###', imp.__name__)
+        try:
+            times.append(time_queue_single(imp))
+            finished.append(imp)
+        except Exception as ex:
+            print(repr(ex))
+    assert len(times) == len(finished)
+    for t, imp in sorted(zip(times, finished)):
+        print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+        results['single'][str(imp.__name__)] = float(t)
+    print()
     print('Batched')
     times = []
     finished = []
@@ -163,5 +172,61 @@ def run():
         json.dump(results, f)
     input('done')
 
+def run_increasing_caps():
+    times = []
+    finished = []
+    for imp in (bar := tqdm.tqdm(check)):
+        print('###', imp.__name__)
+        try:
+            t = time_queue_batched(imp)
+            print(' (prelim)', imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+            times.append(t)
+            finished.append(imp)
+        except Exception as ex:
+            print(repr(ex))
+    assert len(times) == len(finished)
+    for t, imp in sorted(zip(times, finished), key=lambda x:x[0]):
+        print(imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+        results['batched'][str(imp.__name__)] = float(t)
+
+def run_increasing_sizes():
+    dev_name, host = benchmarks.get_device_id()
+    with open(f'benchmarks/sizes_{dev_name}.json', 'w') as f:
+        for n in range(1000, 1000_000, 1000):
+            for imp in (bar := tqdm.tqdm(check)):
+                if n > 10_000 and not (n % 10_000) == 0:
+                    continue
+                if n > 100_000 and not (n % 100_000) == 0:
+                    continue
+                print('###', imp.__name__)
+                try:
+                    t = time_queue_batched(imp, num=n, nevents=10)
+                    print(n, imp.__name__, t, file=f, flush=True)
+                    print(' (prelim)', n, imp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+                except Exception as ex:
+                    print(repr(ex))
+
+def run_increasing_caps():
+    qs = [
+        implementations.BinaryHeap,
+        implementations.LossyRing,
+        implementations.FIFORing,
+        implementations.SortedArray,
+    ]
+    dev_name, host = benchmarks.get_device_id()
+    with open(f'benchmarks/caps_{dev_name}.json', 'w') as f:
+        for n in range(1, 40):
+            for imp in (bar := tqdm.tqdm(qs)):
+                iimp = imp.sized(n)
+                print('###', iimp.__name__)
+                try:
+                    t = time_queue_batched(iimp, num=10000, nevents=100, lam=10, delay=5)
+                    print(n, iimp.__name__, t, file=f, flush=True)
+                    print(' (prelim)', n, iimp.__name__.ljust(20), f'{t: 10.7f}us/ts')
+                except Exception as ex:
+                    print(repr(ex))
+
 if __name__ == '__main__':
-    run()
+    run_increasing_caps()
+    run_increasing_sizes()
+

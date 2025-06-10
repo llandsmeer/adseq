@@ -128,34 +128,44 @@ def sim():
     net.insert(Leak())
     current = jx.step_current(i_delay, i_dur, i_amp, dt, t_max)
     net.delete_stimuli()
-    for stim_ind in range(10):
+    for stim_ind in range(5):
         net.cell(stim_ind).branch(0).loc(0.0).stimulate(current)
     net.delete_recordings()
     net.cell(range(11)).branch(0).loc(0.0).record()
     parameters = net.get_parameters()
     # Define parameter transform and apply it to the parameters.
     transform = jx.ParamTransform([
-        {'DelaySynapse_delay':  jt.SigmoidTransform(1.0, 5.0)},
+        {'DelaySynapse_delay':  jt.SigmoidTransform(.1, 20.0)},
         # {'DelaySynapse_weight': jt.SigmoidTransform(0.0, 5.0)}
     ])
     def loss(opt_params):
         params = transform.forward(opt_params)
         s = jx.integrate(net, delta_t=dt, params=params)
-        return s.mean()
+        n = s.shape[1]
+        return s[:,:n//2].mean() # - s[:,n//2:].mean() / 100
     opt_params = transform.inverse(parameters)
-    optimizer = optax.adam(learning_rate=0.1)
+    optimizer = optax.adam(learning_rate=1)
     opt_state = optimizer.init(opt_params)
     g = jax.jit(jax.value_and_grad(loss, argnums=0))
     OLD = transform.forward(opt_params)
-    for _ in range(200):
+    @jax.jit
+    def step(opt_params, opt_state):
         loss, gradient = g(opt_params)
         updates, opt_state = optimizer.update(gradient, opt_state)
         opt_params = optax.apply_updates(opt_params, updates)
-        print(loss)
+        return loss, opt_params, opt_state
+    for i in range(20):
+        loss, opt_params, opt_state = step(opt_params, opt_state)
+        print(i, loss)
+        # loss, gradient = g(opt_params)
+        # updates, opt_state = optimizer.update(gradient, opt_state)
+        # opt_params = optax.apply_updates(opt_params, updates)
+        # print(loss)
     NEW = transform.forward(opt_params)
-    print(NEW[0]['DelaySynapse_delay'] - OLD[0]['DelaySynapse_delay'])
+    #print(NEW[0]['DelaySynapse_delay'] - OLD[0]['DelaySynapse_delay'])
     s_old = jx.integrate(net, delta_t=dt, params=OLD)
     s_new = jx.integrate(net, delta_t=dt, params=NEW)
+    print(NEW)
     plt.plot(s_old.T, color='black')
     plt.plot(s_new.T-100, color='black')
     plt.savefig('./img/delay_training.png')

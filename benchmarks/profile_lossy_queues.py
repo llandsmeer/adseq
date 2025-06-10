@@ -68,12 +68,13 @@ check = [
 
 if __name__ == '__main__':
     n = len(check)
-    nc = 4
+    nc = 8
     nr = int(jnp.ceil(n / nc))
     fig, ax= plt.subplots(nrows=nr, ncols=nc, sharex=True, sharey=True,
-                          gridspec_kw=dict(hspace=.22, wspace=0))
+                          gridspec_kw=dict(hspace=.22, wspace=0), squeeze=False)
     aax = ax.flatten()
-    for i, imp in enumerate(tqdm.tqdm(check)): make_plot(imp, ax=aax[i])
+    for i, imp in enumerate(tqdm.tqdm(check)):
+        make_plot(imp, ax=aax[i])
 
     for i in range(ax.shape[0]):
         for j in range(ax.shape[1]):
@@ -82,9 +83,10 @@ if __name__ == '__main__':
             if j != 0:
                 ax[i,j].set_ylabel('')
     handles, labels = aax[0].get_legend_handles_labels()
+    plt.rcParams['pdf.fonttype'] = 42
     fig.legend(handles, labels, loc='upper center', ncol=4)
     plt.tight_layout()
-    plt.savefig(f'./img/lossy_queues.svg')
-    plt.savefig(f'./img/lossy_queues.png')
+    #plt.savefig(f'./img/lossy_queues.svg')
+    #plt.savefig(f'./img/lossy_queues.png')
     plt.show()
 
