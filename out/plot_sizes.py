@@ -2,8 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 fns = dict(
-    tpu='./sizes_t1v-n-9a0ef721-w-0_tpu_jax.json',
-    gpu='./sizes_gcn97.local.snellius.surf.nl_gpu_jax.json',
+    tpu='./sizes_t1v-n-0a7ba72c-w-0_tpu_jax.json',
+    gpu='./sizes_gcn135.local.snellius.surf.nl_gpu_jax.json',
     cpu='./sizes_spectre_cpu_jax.json'
     )
 
@@ -33,6 +33,35 @@ order = [
        'SortedArray[4]',
        'BGPQ1',
        ]
+
+fig, ax = plt.subplots(nrows=3, ncols=4, sharex=True, sharey=True, gridspec_kw=dict(
+    hspace=0.0,wspace=0), figsize=(8, 4))
+figlines = []
+figlabels = []
+for i, (k, sub) in enumerate(df.groupby('q')):
+    for j, (a, ssub) in enumerate(sub.groupby('a')):
+        if k in 'DoNothing':
+            continue
+        print(k)
+        if k in 'SingleSpike SingleSpikeKeep BitArray32':
+            aa = ax[0][j]
+            aa.set_title(a)
+        elif k in 'BinaryHeap SortedArray[4] BinaryHeap[7]':
+            aa = ax[2][j]
+        else:
+            aa = ax[1][j]
+        n = ssub.index.get_level_values('n')
+        t = ssub.t
+        line, = aa.plot(n, t, label=k)
+        if j == 1:
+            figlines.append(line)
+            figlabels.append(k)
+        aa.set_xscale('log')
+        aa.set_yscale('log')
+        aa.grid(True)
+plt.figlegend(figlines, figlabels, loc = 'upper center', ncol=4, labelspacing=0.)
+plt.tight_layout()
+plt.show()
 
 fig, ax = plt.subplots(nrows=2, ncols=5, sharex=True, sharey=True, gridspec_kw=dict(
     hspace=0.1,wspace=0), figsize=(8, 4))
