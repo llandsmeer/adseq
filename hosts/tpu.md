@@ -5,12 +5,12 @@ zone=us-central2-b
 project=ml-spike-event-queues
 
 # 'v3-8'
-# name=my-tpu3
-# zone=europe-west4-a
+name=my-tpu3
+zone=europe-west4-a
 
 # 'v2-8'
-# name=my-tpu2
-# zone=us-central1-f
+name=my-tpu2
+zone=us-central1-f
 
 tpu create $name \
     --zone=$zone \
