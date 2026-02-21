@@ -11,6 +11,8 @@ INT_MAX = 0x7fffffff
 
 __all__ = 'FIFORing',
 
+floatx = jax.numpy.array(0.).dtype
+
 class FIFORing(typing.NamedTuple):
     buffer: jax.Array
     head: int | jax.Array
@@ -18,7 +20,7 @@ class FIFORing(typing.NamedTuple):
     @classmethod
     def init(cls, delay, capacity=None, grad=False):
         return cls(
-                jnp.full(delay if capacity is None else capacity, INT_MAX, 'float32' if grad else 'int32'),
+                jnp.full(delay if capacity is None else capacity, INT_MAX, floatx if grad else 'int32'),
                 0, 0
                 )
     @classmethod

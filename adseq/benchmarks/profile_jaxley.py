@@ -22,12 +22,8 @@ import typing
 
 from jaxley.synapses.synapse import Synapse
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-os.chdir(os.path.dirname(os.path.dirname(__file__)))
-
-import implementations
-import synapse
+from .. import implementations
+from .. import synapse
 
 class DelaySynapse(Synapse):
     def __init__(self, name: typing.Optional[str] = None):

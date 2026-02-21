@@ -1,0 +1,78 @@
+[build-system]
+requires = ['setuptools>=68', 'wheel']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'adseq'
+version = '0.1.0'
+description = 'ADSEQ: Autodifferentiable spike-event queues for brain simulation on AI accelerators'
+readme = 'README.md'
+requires-python = '>=3.10'
+license = { text = 'MIT' }
+authors = [
+    { name = 'ADSEQ Authors' }
+]
+keywords = [
+    'jax',
+    'autodiff',
+    'spiking-neural-networks',
+    'brain-simulation',
+    'event-queues',
+    'accelerators'
+]
+classifiers = [
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.12',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Intended Audience :: Science/Research',
+    'Topic :: Scientific/Engineering :: Artificial Intelligence'
+]
+
+dependencies = [
+    'jax>=0.4.0',
+    'optax>=0.1.0',
+    'numpy>=1.26',
+    'matplotlib>=3.8',
+    'pandas>=2.2',
+    'tqdm>=4.66'
+]
+
+[project.optional-dependencies]
+dev = [
+    'pytest>=8.0',
+    'pytest-cov>=5.0',
+    'ruff>=0.5',
+    'mypy>=1.8'
+]
+
+# [project.scripts]
+# just use -m instead
+# adseq-profile-recurrent-snn = 'adseq.benchmarks.profile_recurrent_snn:main'
+# adseq-profile-poisson = 'adseq.benchmarks.profile_poisson:main'
+# adseq-profile-lossy-queues = 'adseq.benchmarks.profile_lossy_queues:main'
+# adseq-profile-jaxley = 'adseq.benchmarks.profile_jaxley:main'
+
+[tool.setuptools]
+py-modules = [
+    'synapse',
+    'synapse2'
+]
+
+[tool.setuptools.packages.find]
+where = ['.']
+include = ['adseq*']
+
+[tool.pytest.ini_options]
+testpaths = ['tests']
+python_files = ['test_*.py']
+addopts = '-q'
+
+[tool.ruff]
+line-length = 100
+target-version = 'py312'
+
+[tool.mypy]
+python_version = '3.12'
+strict = true
+ignore_missing_imports = true

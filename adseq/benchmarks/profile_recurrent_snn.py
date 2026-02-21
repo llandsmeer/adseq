@@ -12,9 +12,9 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
-import benchmarks
-import synapse
-import implementations
+from .. import benchmarks
+from .. import synapse
+from .. import implementations
 
 
 def main():
@@ -175,4 +175,4 @@ def zero_diagonal(arr):
 
 if __name__ == '__main__':
     main()
-    memory()
+    # memory()

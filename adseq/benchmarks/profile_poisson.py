@@ -16,8 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # jax.config.update('jax_platform_name', 'cpu')
 
-import implementations
-import benchmarks
+from .. import implementations
+from .. import benchmarks
 
 # timestamps are encoded as 32-bit timesteps in units of dt
 

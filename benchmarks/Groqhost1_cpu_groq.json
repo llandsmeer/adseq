@@ -1,1 +1,0 @@
-{"single": {"SingleSpike": 0.585705041885376, "DoNothing": 0.6976425647735596, "SingleSpikeKeep": 0.9717702865600586}, "batched": {"DoNothing": 2.6609182357788086, "SingleSpike": 3.5674691200256348, "SingleSpikeKeep": 4.191309213638306}, "host": {"hostname": "Groqhost1", "device": "groq_cpu", "hw_version": "cpu", "jax_version": "0.6.0", "backend": "groq"}}

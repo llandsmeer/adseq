@@ -6,10 +6,8 @@ import tqdm
 import matplotlib.pyplot as plt
 
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
-import implementations
+from .. import implementations
 
 def mkev(lam: float, Nevents: int, key = jax.random.PRNGKey(0)):
     Ntimesteps = lam * Nevents
