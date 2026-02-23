@@ -1,37 +1,30 @@
+# This workflow will upload a Python Package to PyPI when a release is created
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
 name: Upload Python Package
 
 on:
-  push:
-    tags:
-      - 'v*'   # e.g. v1.2.3
+  release:
+    types: [published]
 
 permissions:
   contents: read
 
 jobs:
   release-build:
-    if: contains(github.event.base_ref, 'refs/heads/main') || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Ensure tag is on main
-        run: |
-          git fetch origin main
-          git branch --remote --contains "$GITHUB_SHA" | grep origin/main
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-
-      - name: Extract version from tag
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          VERSION="${VERSION#v}"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build release distributions
         run: |
@@ -50,11 +43,19 @@ jobs:
     needs:
       - release-build
     permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
 
+    # Dedicated environments with protections for publishing are strongly recommended.
+    # For more information, see: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#deployment-protection-rules
     environment:
       name: pypi
+      # OPTIONAL: uncomment and update to include your PyPI project URL in the deployment status:
       url: https://pypi.org/p/adseq
+      #
+      # ALTERNATIVE: if your GitHub Release name is the PyPI project version string
+      # ALTERNATIVE: exactly, uncomment the following line instead:
+      # url: https://pypi.org/project/YOURPROJECT/${{ github.event.release.name }}
 
     steps:
       - name: Retrieve release distributions
