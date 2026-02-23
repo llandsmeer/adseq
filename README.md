@@ -2,6 +2,31 @@
 
 ![ADSEQ aims to implement delay-enabled differentiable event queues for brain simulations](https://github.com/llandsmeer/ml_spike_event_queues/blob/main/img/adseq.png?raw=true)
 
+## RSNN example
+
+```python
+Q = adseq.implementations.FIFORing.sized(3)
+syn = adseq.synapse.mk_synapses(Q,
+      delay_ms=delays, dt_ms=dt,
+      vthres=vthres, tau_syn_ms=tau_syn, n=n*n,
+      max_delay_ms=7
+      )
+syn_step = jax.jit(type(syn).timestep_spike_detect_pre)
+v = jnp.zeros(n)
+state = v, syn
+def step(state, t):
+    v, syn = state
+    isyn = weight @ syn.isyn.reshape((n,n)).sum(0)
+    vnext, s = lif_step(v, isyn, tau_mem, dt, vthres)
+    syn = syn.timestep_spike_detect_pre(
+                   ts=t,
+                   v=jnp.repeat(v, n),
+                   vnext=jnp.repeat(vnext, n))
+    state = vnext, syn
+    return state, (v, s)
+_, trace = jax.lax.scan(step, state, xs=ts = jnp.arange(10000)*dt)
+```
+
 ## Jaxley example
 
 Support is a bit experimental.
