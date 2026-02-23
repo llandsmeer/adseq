@@ -1,6 +1,6 @@
 # ADSEQ: Autodifferentiable spike-event queues for brain simulation on AI accelerators
 
-![lossy_queues](https://raw.githubusercontent.com/llandsmeer/ml_spike_event_queues/main/img/adseq.png)
+![lossy_queues](https://github.com/llandsmeer/ml_spike_event_queues/blob/main/img/adseq.png?raw=true)
 
 Please cite as
 
