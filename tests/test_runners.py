@@ -1,10 +1,6 @@
 import jax.numpy as jnp
 
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-os.chdir(os.path.dirname(os.path.dirname(__file__)))
-
-import benchmarks
+from adseq import benchmarks
 
 f = lambda x: x+1
 x = jnp.array([1])

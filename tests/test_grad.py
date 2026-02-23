@@ -2,10 +2,8 @@ import pytest
 import jax
 
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
-import implementations
+from adseq import implementations
 
 
 @jax.custom_jvp

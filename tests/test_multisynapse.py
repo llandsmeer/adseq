@@ -6,8 +6,8 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 os.chdir(os.path.dirname(os.path.dirname(__file__)))
 
-import implementations
-import synapse
+from adseq import implementations
+from adseq import synapse
 
 check = [
     implementations.SingleSpike,
