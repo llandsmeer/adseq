@@ -9,10 +9,10 @@ __all__ = 'mk_synapse', 'mk_synapses'
 
 floatx = jax.numpy.array(0.).dtype
 
-def mk_synapse(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
+def mk_synapse(Q: type[BaseQueue], *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
     return _mk_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, **k).init()
 
-def mk_synapses(Q: BaseQueue, *a, delay_ms, dt_ms, vthres, tau_syn_ms, n: int, **k):
+def mk_synapses(Q: type[BaseQueue], *a, delay_ms, dt_ms, vthres, tau_syn_ms, n: int, **k):
     return _mk_multi_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, n=n, **k).init()
 
 ###

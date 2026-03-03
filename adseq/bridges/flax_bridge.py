@@ -11,6 +11,21 @@ from .. import synapse2
 
 if not hasattr(typing, 'Self'): typing.Self = None # type: ignore
 
+class StaticMultiSynapse(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def isyn(self) -> jax.Array: ...
+    @abc.abstractmethod
+    def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms) -> typing.Self: ... # type: ignore
+    @abc.abstractmethod
+    def timestep_static_spike(self, ts, s, delay_ms) -> typing.Self: ... # type: ignore
+
+
+TTFSCarry: typing.TypeAlias = tuple[jax.Array, int] | tuple[jax.Array, int, jax.Array]
+LIFCarry: typing.TypeAlias = jax.Array
+DelaySynapseCarry: typing.TypeAlias = tuple[StaticMultiSynapse, int] | tuple[StaticMultiSynapse, int, jax.Array]
+
+
 class Sequential(nn.Module):
     layers: typing.List[nn.Module]
 
@@ -28,7 +43,7 @@ class Sequential(nn.Module):
 
     def trace(self, xs):
         carry = self.init_carry(xs[0])
-        carry, ys = jax.lax.scan(self, carry, xs)
+        carry, ys = jax.lax.scan(self.__call__, carry, xs)
         return ys
 
     def __call__(self, carry, x):
@@ -43,28 +58,21 @@ class Sequential(nn.Module):
         return carry_out, x
 
 
-class StaticMultiSynapse(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def isyn(self) -> jax.Array: ...
 
-    @abc.abstractmethod
-    def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms) -> typing.Self: ... # type: ignore
 
-    @abc.abstractmethod
-    def timestep_static_spike(self, ts, s, delay_ms) -> typing.Self: ... # type: ignore
-
-DelaySynapseCarry: typing.TypeAlias = tuple[StaticMultiSynapse, int] | tuple[StaticMultiSynapse, int, jax.Array]
 
 
 class DenseInput(nn.Module):
     dt: float
     nout: int | None = None
+    weight_init: nn.initializers.Initializer= nn.initializers.uniform(1.5)
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
+    queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
     def setup(self):
         self.model = Sequential([
             Explode(self.nout),
-            DelayedStaticSynapse(self.dt),
-            LTIReduce(self.nout)
+            DelayedStaticSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+            LTIReduce(self.nout, self.weight_init)
             ])
     def init_carry(self, x):
         return self.model.init_carry(x)
@@ -75,11 +83,14 @@ class DenseInput(nn.Module):
 class Dense(nn.Module):
     dt: float
     nout: int | None = None
+    weight_init: nn.initializers.Initializer= nn.initializers.uniform(1.5)
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
+    queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
     def setup(self):
         self.model = Sequential([
             Explode(self.nout),
-            DelayedThresholdSynapse(self.dt),
-            LTIReduce(self.nout)
+            DelayedThresholdSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+            LTIReduce(self.nout, self.weight_init)
             ])
     def init_carry(self, x):
         return self.model.init_carry(x)
@@ -120,13 +131,13 @@ class DelayedThresholdSynapse(nn.Module):
     dt: float
     tau_syn1_ms: float = 0.5
     tau_syn2_ms: float = 2.0
-    max_delay: float = 200.
+    max_delay: float = 20.
     vthres: float = 1.0
-    delay_init: nn.initializers.Initializer = nn.initializers.normal()
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
     delay_activation = lambda self, x: self.max_delay * (1 + nn.tanh(x))
     queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
 
-    def init_carry(self, v=jax.Array, vnext: jax.Array|None=None) -> DelaySynapseCarry:
+    def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -> DelaySynapseCarry:
         'if vnext is none, we delay one timestep'
         assert len(v.shape) == 1
         syn = synapse2.mk_synapse2s(self.queue,
@@ -137,7 +148,7 @@ class DelayedThresholdSynapse(nn.Module):
                                    n=len(v),
                 max_delay_ms=self.max_delay)
         if vnext is None:
-            return syn, 0, 0*v
+            return syn, 0, 0*v # type: ignore
         else:
             assert vnext.shape == v.shape
             return syn, 0 # type: ignore
@@ -164,8 +175,8 @@ class DelayedStaticSynapse(nn.Module):
     dt: float
     tau_syn1_ms: float = 0.5
     tau_syn2_ms: float = 2.0
-    max_delay: float = 200.
-    delay_init: nn.initializers.Initializer = nn.initializers.normal()
+    max_delay: float = 20.
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
     delay_activation = lambda self, x: self.max_delay * (1 + nn.tanh(x))
     queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
 
@@ -190,8 +201,6 @@ class DelayedStaticSynapse(nn.Module):
         syn = syn.timestep_static_spike(ts=ts, s=s, delay_ms=delay)
         return (syn, ts+1), isyn
 
-LIFCarry: typing.TypeAlias = jax.Array
-
 class SurrogateLIF(nn.Module):
     dt: float
     tau_mem: float = 10.
@@ -208,6 +217,70 @@ class SurrogateLIF(nn.Module):
         v_next = (1 - S) * (beta * v + isyn*self.dt)
         return v_next, S
 
+class SingleSpikeFilter(nn.Module):
+    'Passthrough voltage until spike, then hold'
+    dt: float
+    vthres: float = 1.0
+
+    def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -> TTFSCarry:
+        'if vnext is none, we delay one timestep'
+        assert len(v.shape) == 1
+        if vnext is None:
+            return 0*v, 0, 0*v
+        else:
+            assert vnext.shape == v.shape
+            return 0*v, 0
+
+    @nn.compact
+    def __call__(self, carry: LIFCarry, v: jax.Array, vnext: jax.Array|None=None) -> tuple[TTFSCarry, jax.Array]:
+        if vnext is None:
+            assert len(carry) == 3
+            vhold, ts, vprev = carry
+            v, vnext = vprev, v
+        else:
+            assert len(carry) == 2
+            vhold, ts = carry
+        out = jnp.where(vhold >= self.vthres, vhold, v)
+        vhold = jnp.where(vhold >= self.vthres, vhold, v)
+        if len(carry) == 3:
+            return (vhold, ts+1, vnext), out
+        else:
+            return (vhold, ts+1), out
+
+class TTFSFilter(nn.Module):
+    'Receives voltages, outputs differentiable first spike time'
+    dt: float
+    vthres: float = 1.0
+
+    def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -> TTFSCarry:
+        'if vnext is none, we delay one timestep'
+        assert len(v.shape) == 1
+        if vnext is None:
+            return -1 + 0*v, 0, 0*v
+        else:
+            assert vnext.shape == v.shape
+            return -1 + 0*v, 0
+
+    @nn.compact
+    def __call__(self, carry: LIFCarry, v: jax.Array, vnext: jax.Array|None=None) -> tuple[TTFSCarry, jax.Array]:
+        if vnext is None:
+            assert len(carry) == 3
+            ttfs, ts, vprev = carry
+            v, vnext = vprev, v
+        else:
+            assert len(carry) == 2
+            ttfs, ts = carry
+        ttfs: jax.Array
+        tpost = jax.vmap(synapse2.spike_detect, in_axes=[None,None,None,0,0,None])(self.dt, self.dt*ts, self.vthres, v, vnext, 0.)
+        ttfs = jnp.where((ttfs != -1),
+                   jnp.where((tpost != -1),
+                             jnp.minimum(ttfs, tpost),
+                             ttfs),
+                         tpost)
+        if len(carry) == 3:
+            return (ttfs, ts+1, vnext), ttfs
+        else:
+            return (ttfs, ts+1), ttfs
 
 @jax.custom_jvp
 def superspike(x):

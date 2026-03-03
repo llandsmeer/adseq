@@ -8,10 +8,10 @@ from .implementations import BaseQueue
 __all__ = 'mk_synapse2', 'mk_synapse2s'
 
 floatx = jax.numpy.array(0.).dtype
-def mk_synapse2(Q: BaseQueue, *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, **k):
+def mk_synapse2(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, **k):
     return _mk_synapse(Q, *a, dt_ms=dt_ms, vthres=vthres, tau_syn1_ms=tau_syn1_ms, tau_syn2_ms=tau_syn2_ms, **k).init()
 
-def mk_synapse2s(Q: BaseQueue, *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, n: int, **k):
+def mk_synapse2s(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, n: int, **k):
     return _mk_multi_synapse(Q, *a, dt_ms=dt_ms, vthres=vthres, tau_syn1_ms=tau_syn1_ms, tau_syn2_ms=tau_syn2_ms, n=n, **k).init()
 
 ###
@@ -66,7 +66,7 @@ def _mk_multi_synapse(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_sy
             queues = jax.vmap(lambda _: Q.init(max_delay_steps, *a, **k, grad=True))(jnp.empty(n)) # type: ignore
             isyn1 = jnp.zeros(n, dtype=floatx)
             isyn2 = jnp.zeros(n, dtype=floatx)
-            return cls(queues, isyn, isyn) # type: ignore
+            return cls(queues, isyn1, isyn2) # type: ignore
         def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms):
             assert len(delay_ms.shape) == 1 and delay_ms.shape[0] == n
             assert len(v.shape) == 1 and v.shape[0] == n
