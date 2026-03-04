@@ -1,4 +1,4 @@
-# ADSEQ: Autodifferentiable spike-event queues for brain simulation on AI accelerators
+# ADSEQ: A library for Autodifferentiable spike-event queues for brain simulation on AI accelerators
 
 ![ADSEQ aims to implement delay-enabled differentiable event queues for brain simulations](https://github.com/llandsmeer/ml_spike_event_queues/blob/main/img/adseq.png?raw=true)
 
