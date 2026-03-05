@@ -26,6 +26,9 @@ def step(state, t):
     return state, (v, s)
 _, trace = jax.lax.scan(step, state, xs=ts = jnp.arange(10000)*dt)
 ```
+# Bridges
+
+`adseq` does not aim to be another brain simulation package. Instead, it provides 'bridges' to other existing packages.
 
 ## Jaxley example
 
@@ -62,6 +65,25 @@ for i in range(100):
     updates, opt_state = optimizer.update(gradient, opt_state)
     opt_params = optax.apply_updates(opt_params, updates)
 ```
+
+## Flax bridge
+
+```python
+import flax.linen as nn
+import adseq.bridges.flax_bridge as adseq
+
+dt = 0.1
+model = adseq.Sequential([
+
+        adseq.DenseInput(dt, 30, queue=adseq.implementations.SingleSpike),
+        adseq.LIF(dt, output='single_spike'),
+
+        adseq.Dense(dt, 2, weight_init=nn.initializers.uniform(1.5)),
+        adseq.LIF(dt, output='ttfs'),
+
+        ])
+```
+
 
 ## Citation
 
