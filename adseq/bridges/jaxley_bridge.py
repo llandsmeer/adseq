@@ -25,13 +25,9 @@ from .. import implementations
 from .. import synapse2
 from ..implementations import SingleSpike
 
-__all__ = 'DelaySynapse','SingleSpike', 'FIFORing', 'FIFORing2', 'FIFORing3', 'FIFORing4', 'FIFORing5'
+__all__ = 'DelaySynapse','SingleSpike', 'FIFORing'
 
 FIFORing = implementations.FIFORing
-FIFORing2 = FIFORing.sized(2)
-FIFORing3 = FIFORing.sized(3)
-FIFORing4 = FIFORing.sized(4)
-FIFORing5 = FIFORing.sized(5)
 
 
 

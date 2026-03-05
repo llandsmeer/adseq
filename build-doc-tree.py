@@ -1,6 +1,6 @@
 import pathlib
 
-HTTP_ROOT = 'https://llandsmeer.github.io/ml_spike_event_queues/'
+HTTP_ROOT = 'https://llandsmeer.github.io/adseq/'
 
 def build(path: pathlib.Path, indent: int = 0):
     def emit(*a):

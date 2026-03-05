@@ -4,7 +4,7 @@ build-backend = 'setuptools.build_meta'
 
 [project]
 name = 'adseq'
-version = '0.9.2'
+version = '0.9.3'
 description = 'ADSEQ: Autodifferentiable spike-event queues for brain simulation on AI accelerators'
 readme = 'README.md'
 requires-python = '>=3.10'

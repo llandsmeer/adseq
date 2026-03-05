@@ -3,6 +3,7 @@ import jax
 import jax.numpy as jnp
 import optax
 import flax.linen as nn
+import adseq.bridges.flax_bridge as adseq
 
 # {'params': {
 # 'layers_0': {'model': {
@@ -20,26 +21,21 @@ import flax.linen as nn
 #         'weight': Array([-0.08041628, -0.08316632, -0.0766072 , -0.08608952, -0.068454  ,
 #                         -0.0766072 , -0.0766072 , -0.08122645], dtype=float32)}}}}}
 
-import adseq.bridges.flax_bridge as adseq
-
 dt = 0.1
 model = adseq.Sequential([
         # Hidden layer 1
-        adseq.DenseInput(dt, 4,
-            weight_init=partial(jax.random.uniform, minval=-0.5, maxval=2.0),
+        adseq.DenseInput(dt, 2,
+            weight_init=partial(jax.random.uniform, minval=-0.1, maxval=1.0),
             queue=adseq.implementations.SingleSpike),
-        adseq.SurrogateLIF(dt),
-        adseq.SingleSpikeFilter(dt),
+        adseq.LIF(dt, output='single_spike'),
         # Hidden layer 2
-        ## adseq.Dense(dt, 4,
-        ##     weight_init=partial(jax.random.uniform, minval=-0.5, maxval=2.0),
-        ##     queue=adseq.implementations.SingleSpike),
-        ## adseq.SurrogateLIF(dt),
-        ## adseq.SingleSpikeFilter(dt),
+        adseq.Dense(dt, 5,
+            weight_init=partial(jax.random.uniform, minval=-0.1, maxval=1.0),
+            queue=adseq.implementations.SingleSpike),
+        adseq.LIF(dt, output='single_spike'),
         # Output layer
         adseq.Dense(dt, 2, weight_init=nn.initializers.uniform(1.5)),
-        adseq.SurrogateLIF(dt),
-        adseq.TTFSFilter(dt),
+        adseq.LIF(dt, output='ttfs'),
         ])
 
 
@@ -80,6 +76,10 @@ def step(params, opt_state, x, y):
     updates, opt_state = optimizer.update(g, opt_state)
     params = optax.apply_updates(params, updates)
     return params, opt_state, l, g, o
+
+o = model.apply(params, xs[0], output_all=True, method='trace')
+#isyn0, p
+breakpoint()
 
 for epoch in range(1000):
     print()

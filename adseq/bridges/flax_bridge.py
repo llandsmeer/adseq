@@ -41,20 +41,26 @@ class Sequential(nn.Module):
             cs.append(carry)
         return cs
 
-    def trace(self, xs):
+    def trace(self, xs, output_all=False):
         carry = self.init_carry(xs[0])
-        carry, ys = jax.lax.scan(self.__call__, carry, xs)
+        carry, ys = jax.lax.scan(lambda c, x: self.__call__(c, x, output_all), carry, xs)
         return ys
 
-    def __call__(self, carry, x):
+    def __call__(self, carry, x, output_all=False):
         if carry is None: carry = self.init_carry(x)
         carry_out = []
+        if output_all:
+            output = []
         for c, layer in zip(carry, self.layers):
             if c is None:
                 x = layer(x)
             else:
                 c, x = layer(c, x)
             carry_out.append(c)
+            if output_all:
+                output.append(x)
+        if output_all:
+            return carry_out, output
         return carry_out, x
 
 
@@ -123,6 +129,7 @@ class LTIReduce(nn.Module):
         assert nsyn == nin * nout
         assert len(isyn.shape) == 1
         weight = self.param('weight', self.weight_init, isyn.shape)
+        # isyn = (isyn * weight).reshape(nout, nin)
         isyn = (isyn * weight).reshape(nout, nin)
         return isyn.sum(1) # second dimension if not batched
 
@@ -201,6 +208,44 @@ class DelayedStaticSynapse(nn.Module):
         syn = syn.timestep_static_spike(ts=ts, s=s, delay_ms=delay)
         return (syn, ts+1), isyn
 
+class LIF(nn.Module):
+    dt: float
+    tau_mem: float = 10.
+    vthres: float = 1.0
+    reset_gradient: typing.Literal['surrogate'] = 'surrogate'
+    output: typing.Literal['voltage'] | typing.Literal['single_spike'] | typing.Literal['ttfs'] | typing.Literal['superspike'] = 'voltage'
+
+    def setup(self):
+        assert self.reset_gradient == 'surrogate'
+        self.model = SurrogateLIF(self.dt, self.tau_mem, self.vthres)
+        if self.output == 'voltage':
+            self.model_output = None
+        elif self.output == 'superspike':
+            self.model_output = SurrogateSpikeFilter(self.dt, self.vthres)
+        elif self.output == 'single_spike':
+            self.model_output = SingleSpikeFilter(self.dt, self.vthres)
+        elif self.output == 'ttfs':
+            self.model_output = TTFSFilter(self.dt, self.vthres)
+
+    def init_carry(self, isyn):
+        carry = self.model.init_carry(isyn)
+        if self.model_output is None:
+            return carry
+        _carry, v = self.model(carry, isyn)
+        carry_output = self.model_output.init_carry(v)
+        return carry, carry_output
+
+    def __call__(self, carry, isyn):
+        if self.model_output is None:
+            carry, out = self.model(carry, isyn)
+        else:
+            c0, c1 = carry
+            c0, v = self.model(c0, isyn)
+            c1, out = self.model_output(c1, v)
+            carry = c0, c1
+        return carry, out
+
+
 class SurrogateLIF(nn.Module):
     dt: float
     tau_mem: float = 10.
@@ -215,11 +260,19 @@ class SurrogateLIF(nn.Module):
         S = superspike(v - self.vthres)
         beta = jnp.exp(-self.dt/self.tau_mem)
         v_next = (1 - S) * (beta * v + isyn*self.dt)
-        return v_next, S
+        return v_next, v
+
+class SurrogateSpikeFilter(nn.Module):
+    dt: float = None
+    vthres: float = 1.0
+    def init_carry(self, v): return None
+    def __call__(self, carry, v):
+        S = superspike(v - self.vthres)
+        return carry, S
 
 class SingleSpikeFilter(nn.Module):
     'Passthrough voltage until spike, then hold'
-    dt: float
+    dt: float = None
     vthres: float = 1.0
 
     def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -> TTFSCarry:
@@ -241,7 +294,7 @@ class SingleSpikeFilter(nn.Module):
             assert len(carry) == 2
             vhold, ts = carry
         out = jnp.where(vhold >= self.vthres, vhold, v)
-        vhold = jnp.where(vhold >= self.vthres, vhold, v)
+        vhold = jnp.where(vhold >= self.vthres, vhold, jax.lax.stop_gradient(v))
         if len(carry) == 3:
             return (vhold, ts+1, vnext), out
         else:
