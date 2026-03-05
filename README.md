@@ -74,14 +74,23 @@ import adseq.bridges.flax_bridge as adseq
 
 dt = 0.1
 model = adseq.Sequential([
-
+        # single spike hidden layer
         adseq.DenseInput(dt, 30, queue=adseq.implementations.SingleSpike),
         adseq.LIF(dt, output='single_spike'),
 
+        # ttfs output layer
         adseq.Dense(dt, 2, weight_init=nn.initializers.uniform(1.5)),
         adseq.LIF(dt, output='ttfs'),
-
         ])
+
+x = jnp.zeros((100, 4))
+x = x.at[0, 0].set(1)
+x = x.at[100, 1].set(1)
+x = x.at[50, 2].set(1)
+x = x.at[10, 3].set(1)
+
+params = model.init(jax.random.key(0), None, x)
+ttfs = model.apply(params, x, method='trace')
 ```
 
 
