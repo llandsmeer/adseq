@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>adseq.benchmarks.profile_jaxley API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>adseq.benchmarks.profile_jaxley</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="adseq.benchmarks.profile_jaxley.sim"><code class="name flex">
+<span>def <span class="ident">sim</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sim():
+    num_cells = 11
+    delays = jnp.array(2+3*np.random.random(num_cells*(num_cells-1)))
+    weights = jnp.array(5*np.random.random(num_cells*(num_cells-1)))
+    comp = jx.Compartment()
+    branch = jx.Branch(comp, ncomp=4)
+    cell = jx.Cell(branch, parents=[-1, 0, 0, 1, 1, 2, 2])
+    i_delay = 3.0  # ms
+    i_amp = 0.05  # nA
+    i_dur = 2.0  # ms
+    dt = 0.025  # ms
+    t_max = 50.0  # ms
+    net = jx.Network([cell for _ in range(num_cells)])
+    pre = net.cell(range(num_cells))
+    post = net.cell(range(num_cells))
+    fully_connect(pre, post, DelaySynapse(), True)
+    idx = np.arange(num_cells)
+    net.select(edges=idx*num_cells+idx).set(&#39;DelaySynapse_delay&#39;, 0)
+    net.select(edges=idx*num_cells+idx).set(&#39;DelaySynapse_weight&#39;, 0)
+    nonself = np.array([i*num_cells + j for i in range(num_cells) for j in range(num_cells) if i != j])
+    net.select(edges=nonself).set(&#39;DelaySynapse_delay&#39;, delays)
+    net.select(edges=nonself).set(&#39;DelaySynapse_weight&#39;, weights)
+    net.select(edges=nonself).make_trainable(&#39;DelaySynapse_delay&#39;)
+    # net.select(edges=nonself).make_trainable(&#39;DelaySynapse_weight&#39;)
+    net.insert(Na())
+    net.insert(K())
+    net.insert(Leak())
+    current = jx.step_current(i_delay, i_dur, i_amp, dt, t_max)
+    net.delete_stimuli()
+    for stim_ind in range(5):
+        net.cell(stim_ind).branch(0).loc(0.0).stimulate(current)
+    net.delete_recordings()
+    net.cell(range(11)).branch(0).loc(0.0).record()
+    parameters = net.get_parameters()
+    # Define parameter transform and apply it to the parameters.
+    transform = jx.ParamTransform([
+        {&#39;DelaySynapse_delay&#39;:  jt.SigmoidTransform(.1, 20.0)},
+        # {&#39;DelaySynapse_weight&#39;: jt.SigmoidTransform(0.0, 5.0)}
+    ])
+    def loss(opt_params):
+        params = transform.forward(opt_params)
+        s = jx.integrate(net, delta_t=dt, params=params)
+        n = s.shape[1]
+        return s[:,:n//2].mean() # - s[:,n//2:].mean() / 100
+    opt_params = transform.inverse(parameters)
+    optimizer = optax.adam(learning_rate=1)
+    opt_state = optimizer.init(opt_params)
+    g = jax.jit(jax.value_and_grad(loss, argnums=0))
+    OLD = transform.forward(opt_params)
+    @jax.jit
+    def step(opt_params, opt_state):
+        loss, gradient = g(opt_params)
+        updates, opt_state = optimizer.update(gradient, opt_state)
+        opt_params = optax.apply_updates(opt_params, updates)
+        return loss, opt_params, opt_state
+    for i in range(20):
+        loss, opt_params, opt_state = step(opt_params, opt_state)
+        print(i, loss)
+        # loss, gradient = g(opt_params)
+        # updates, opt_state = optimizer.update(gradient, opt_state)
+        # opt_params = optax.apply_updates(opt_params, updates)
+        # print(loss)
+    NEW = transform.forward(opt_params)
+    #print(NEW[0][&#39;DelaySynapse_delay&#39;] - OLD[0][&#39;DelaySynapse_delay&#39;])
+    s_old = jx.integrate(net, delta_t=dt, params=OLD)
+    s_new = jx.integrate(net, delta_t=dt, params=NEW)
+    print(NEW)
+    plt.plot(s_old.T, color=&#39;black&#39;)
+    plt.plot(s_new.T-100, color=&#39;black&#39;)
+    plt.savefig(&#39;./img/delay_training.png&#39;)
+    plt.show()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="adseq.benchmarks.profile_jaxley.DelaySynapse"><code class="flex name class">
+<span>class <span class="ident">DelaySynapse</span></span>
+<span>(</span><span>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DelaySynapse(Synapse):
+    def __init__(self, name: typing.Optional[str] = None):
+        super().__init__(name)
+        prefix = self._name
+        # queue = implementations.FIFORing.sized(1).init(None, grad=True)
+        queue = implementations.SingleSpike.init(None, grad=True)
+        queue_list, self.struct = jax.tree.flatten(queue)
+        self.struct_size = len(queue_list)
+        self.synapse_params = {
+            f&#39;{prefix}_tau&#39;: 2.,  # ms
+            f&#39;{prefix}_delay&#39;: 10.,  # ms
+            f&#39;{prefix}_weight&#39;: 1.,  # ms
+        }
+        self.synapse_states: dict[str, typing.Any] = {
+            f&#39;{prefix}_queue{i}&#39;: queue[i]
+            for i in range(self.struct_size)
+        }
+        self.synapse_states[f&#39;{prefix}_vprev&#39;] = 0.
+        self.synapse_states[f&#39;{prefix}_isyn&#39;] = 0.
+        self.synapse_states[f&#39;{prefix}_ts&#39;] = 0.
+
+    def update_states(
+        self,
+        states: dict,
+        delta_t: float,
+        pre_voltage: float,
+        post_voltage: float,
+        params: dict,
+    ) -&gt; dict:
+        prefix = self._name
+        queues = self.struct.unflatten([
+            states[f&#39;{prefix}_queue{i}&#39;]
+            for i in range(self.struct_size)
+            ])
+        ts = states[f&#39;{prefix}_ts&#39;]
+        vthres = 1.0
+        delay_ms = params[f&#39;{prefix}_delay&#39;]
+        tau_syn_ms = params[f&#39;{prefix}_tau&#39;]
+        def timestep(ts, queue, isyn, v, vnext, delay_ms, tau_syn_ms):
+            alpha = jnp.exp(-delta_t / tau_syn_ms) # inefficient
+            tpost = synapse.spike_detect(delta_t, ts, vthres, v, vnext, delay_ms)
+            queue = jax.lax.cond(tpost != -1, # must be a better solution
+                 lambda: queue.enqueue(synapse.time_to_timestep_keep_gradient(tpost, delta_t)), # type: ignore
+                 lambda: queue)
+            queue, post_hit = queue.pop(synapse.time_to_timestep_keep_gradient(ts, delta_t))
+            isyn = alpha * isyn + \
+                   synapse.apply_recv_gradient(post_hit, tau_syn_ms)
+            return (queue, isyn)
+        vprev = states[f&#39;{prefix}_vprev&#39;]
+        isyn = states[f&#39;{prefix}_isyn&#39;]
+        queues, isyn = jax.vmap(timestep)(
+                ts, #ugly
+                queues, isyn,
+                vprev, pre_voltage, delay_ms, tau_syn_ms)
+        queue_parts, _struct = jax.tree.flatten(queues)
+        state_out: dict[str, typing.Any] = {
+            f&#39;{prefix}_queue{i}&#39;: queue_parts[i]
+            for i in range(self.struct_size)
+        }
+        state_out[f&#39;{prefix}_vprev&#39;] = pre_voltage
+        state_out[f&#39;{prefix}_isyn&#39;] = isyn
+        state_out[f&#39;{prefix}_ts&#39;] = states[f&#39;{prefix}_ts&#39;] + delta_t
+        return state_out
+
+    def compute_current(
+        self, states: dict, pre_voltage: float, post_voltage: float, params: dict
+    ) -&gt; float:
+        prefix = self._name
+        return -0.01 * states[f&#39;{prefix}_isyn&#39;] * params[f&#39;{prefix}_weight&#39;]</code></pre>
+</details>
+<div class="desc"><p>Base class for a synapse.</p>
+<p>As in NEURON, a <code>Synapse</code> is considered a point process, which means that its
+conductances are to be specified in <code>uS</code> and its currents are to be specified in
+<code>nA</code>.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>jaxley.synapses.synapse.Synapse</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.benchmarks.profile_jaxley.DelaySynapse.compute_current"><code class="name flex">
+<span>def <span class="ident">compute_current</span></span>(<span>self, states: dict, pre_voltage: float, post_voltage: float, params: dict) ‑> float</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def compute_current(
+    self, states: dict, pre_voltage: float, post_voltage: float, params: dict
+) -&gt; float:
+    prefix = self._name
+    return -0.01 * states[f&#39;{prefix}_isyn&#39;] * params[f&#39;{prefix}_weight&#39;]</code></pre>
+</details>
+<div class="desc"><p>Return current through one synapse in <code>nA</code>.</p>
+<p>Internally, we use <code>jax.vmap</code> to vectorize this function across many synapses.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>states</code></strong></dt>
+<dd>States of the synapse.</dd>
+<dt><strong><code>pre_voltage</code></strong></dt>
+<dd>Voltage of the presynaptic compartment, shape <code>()</code>.</dd>
+<dt><strong><code>post_voltage</code></strong></dt>
+<dd>Voltage of the postsynaptic compartment, shape <code>()</code>.</dd>
+<dt><strong><code>params</code></strong></dt>
+<dd>Parameters of the synapse. Conductances in <code>uS</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Current through the synapse in <code>nA</code>, shape <code>()</code>.</p></div>
+</dd>
+<dt id="adseq.benchmarks.profile_jaxley.DelaySynapse.update_states"><code class="name flex">
+<span>def <span class="ident">update_states</span></span>(<span>self,<br>states: dict,<br>delta_t: float,<br>pre_voltage: float,<br>post_voltage: float,<br>params: dict) ‑> dict</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def update_states(
+    self,
+    states: dict,
+    delta_t: float,
+    pre_voltage: float,
+    post_voltage: float,
+    params: dict,
+) -&gt; dict:
+    prefix = self._name
+    queues = self.struct.unflatten([
+        states[f&#39;{prefix}_queue{i}&#39;]
+        for i in range(self.struct_size)
+        ])
+    ts = states[f&#39;{prefix}_ts&#39;]
+    vthres = 1.0
+    delay_ms = params[f&#39;{prefix}_delay&#39;]
+    tau_syn_ms = params[f&#39;{prefix}_tau&#39;]
+    def timestep(ts, queue, isyn, v, vnext, delay_ms, tau_syn_ms):
+        alpha = jnp.exp(-delta_t / tau_syn_ms) # inefficient
+        tpost = synapse.spike_detect(delta_t, ts, vthres, v, vnext, delay_ms)
+        queue = jax.lax.cond(tpost != -1, # must be a better solution
+             lambda: queue.enqueue(synapse.time_to_timestep_keep_gradient(tpost, delta_t)), # type: ignore
+             lambda: queue)
+        queue, post_hit = queue.pop(synapse.time_to_timestep_keep_gradient(ts, delta_t))
+        isyn = alpha * isyn + \
+               synapse.apply_recv_gradient(post_hit, tau_syn_ms)
+        return (queue, isyn)
+    vprev = states[f&#39;{prefix}_vprev&#39;]
+    isyn = states[f&#39;{prefix}_isyn&#39;]
+    queues, isyn = jax.vmap(timestep)(
+            ts, #ugly
+            queues, isyn,
+            vprev, pre_voltage, delay_ms, tau_syn_ms)
+    queue_parts, _struct = jax.tree.flatten(queues)
+    state_out: dict[str, typing.Any] = {
+        f&#39;{prefix}_queue{i}&#39;: queue_parts[i]
+        for i in range(self.struct_size)
+    }
+    state_out[f&#39;{prefix}_vprev&#39;] = pre_voltage
+    state_out[f&#39;{prefix}_isyn&#39;] = isyn
+    state_out[f&#39;{prefix}_ts&#39;] = states[f&#39;{prefix}_ts&#39;] + delta_t
+    return state_out</code></pre>
+</details>
+<div class="desc"><p>ODE update step.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>states</code></strong></dt>
+<dd>States of the synapse.</dd>
+<dt><strong><code>delta_t</code></strong></dt>
+<dd>Time step in <code>ms</code>.</dd>
+<dt><strong><code>pre_voltage</code></strong></dt>
+<dd>Voltage of the presynaptic compartment, shape <code>()</code>.</dd>
+<dt><strong><code>post_voltage</code></strong></dt>
+<dd>Voltage of the postsynaptic compartment, shape <code>()</code>.</dd>
+<dt><strong><code>params</code></strong></dt>
+<dd>Parameters of the synapse. Conductances in <code>uS</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Updated states.</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="adseq.benchmarks" href="index.html">adseq.benchmarks</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="adseq.benchmarks.profile_jaxley.sim" href="#adseq.benchmarks.profile_jaxley.sim">sim</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="adseq.benchmarks.profile_jaxley.DelaySynapse" href="#adseq.benchmarks.profile_jaxley.DelaySynapse">DelaySynapse</a></code></h4>
+<ul class="">
+<li><code><a title="adseq.benchmarks.profile_jaxley.DelaySynapse.compute_current" href="#adseq.benchmarks.profile_jaxley.DelaySynapse.compute_current">compute_current</a></code></li>
+<li><code><a title="adseq.benchmarks.profile_jaxley.DelaySynapse.update_states" href="#adseq.benchmarks.profile_jaxley.DelaySynapse.update_states">update_states</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>
