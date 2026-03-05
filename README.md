@@ -2,6 +2,12 @@
 
 ![ADSEQ aims to implement delay-enabled differentiable event queues for brain simulations](https://github.com/llandsmeer/ml_spike_event_queues/blob/main/img/adseq.png?raw=true)
 
+## Installation
+
+```
+pip install adseq
+```
+
 ## RSNN example
 
 ```python
