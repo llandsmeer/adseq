@@ -35,13 +35,14 @@ def _mk_synapse(Q: type[BaseQueue], *a, max_delay_ms, dt_ms, vthres, tau_syn1_ms
         @classmethod
         def init(cls):
             return cls(Q.init(int(math.ceil(max_delay_ms/dt_ms)), *a, **k, grad=True), jnp.array(0.), jnp.array(0.)) # type: ignore
-        def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms):
-            tpost = spike_detect(dt_ms, ts, vthres, v, vnext, delay_ms)
+        def timestep_spike_detect_pre(self, t_ms, v, vnext, delay_ms):
+            't_ms and delay_ms in ms, vnext is used for spike detection and dvdt estimation'
+            tpost = spike_detect(dt_ms, t_ms, vthres, v, vnext, delay_ms)
             queue = self.queue
             queue = jax.lax.cond(tpost != -1, # must be a better solution
                  lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
                  lambda: queue)
-            queue, post_hit = queue.pop(time_to_timestep_keep_gradient(ts, dt_ms))
+            queue, post_hit = queue.pop(time_to_timestep_keep_gradient(t_ms, dt_ms))
             isyn1 = alpha * self.isyn1 + apply_recv_gradient(post_hit, tau_syn1_ms)
             isyn2 = beta * self.isyn2 + apply_recv_gradient(post_hit, tau_syn2_ms)
             return StaticSynapse(queue, isyn1, isyn2)
@@ -67,16 +68,17 @@ def _mk_multi_synapse(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_sy
             isyn1 = jnp.zeros(n, dtype=floatx)
             isyn2 = jnp.zeros(n, dtype=floatx)
             return cls(queues, isyn1, isyn2) # type: ignore
-        def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms):
+        def timestep_spike_detect_pre(self, t_ms, v, vnext, delay_ms):
+            't_ms and delay_ms in ms, vnext is used for spike detection and dvdt estimation'
             assert len(delay_ms.shape) == 1 and delay_ms.shape[0] == n
             assert len(v.shape) == 1 and v.shape[0] == n
             assert len(vnext.shape) == 1 and vnext.shape[0] == n
             def timestep(queue, isyn1, isyn2, v, vnext, delay_ms):
-                tpost = spike_detect(dt_ms, ts, vthres, v, vnext, delay_ms)
+                tpost = spike_detect(dt_ms, t_ms, vthres, v, vnext, delay_ms)
                 queue = jax.lax.cond(tpost != -1, # must be a better solution
                      lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
                      lambda: queue)
-                queue, post_hit = queue.pop(time_to_timestep_keep_gradient(ts, dt_ms))
+                queue, post_hit = queue.pop(time_to_timestep_keep_gradient(t_ms, dt_ms))
                 isyn1 = alpha * isyn1 + apply_recv_gradient(post_hit, tau_syn1_ms)
                 isyn2 = beta  * isyn2 + apply_recv_gradient(post_hit, tau_syn2_ms)
                 return (queue, isyn1, isyn2)
@@ -84,15 +86,15 @@ def _mk_multi_synapse(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_sy
                     self.queues, self.isyn1, self.isyn2,
                     v, vnext, delay_ms)
             return StaticMultiSynapse(queues, isyn1, isyn2)
-        def timestep_static_spike(self, ts, s, delay_ms):
+        def timestep_static_spike(self, t_ms, s, delay_ms):
             assert len(delay_ms.shape) == 1 and delay_ms.shape[0] == n
             assert len(s.shape) == 1 and s.shape[0] == n
             def timestep(queue, isyn1, isyn2, s, delay_ms):
-                tpost = ts + delay_ms
+                tpost = t_ms + delay_ms
                 queue = jax.lax.cond(s, # must be a better solution
                      lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
                      lambda: queue)
-                queue, post_hit = queue.pop(time_to_timestep_keep_gradient(ts, dt_ms))
+                queue, post_hit = queue.pop(time_to_timestep_keep_gradient(t_ms, dt_ms))
                 isyn1 = alpha * isyn1 + apply_recv_gradient(post_hit, tau_syn1_ms)
                 isyn2 = beta  * isyn2 + apply_recv_gradient(post_hit, tau_syn2_ms)
                 return (queue, isyn1, isyn2)
@@ -103,21 +105,21 @@ def _mk_multi_synapse(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_sy
     return StaticMultiSynapse
 
 @jax.custom_jvp
-def spike_detect(dt, ts, vthres, v, vnext, delay):
-    del dt
+def spike_detect(dt, t, vthres, v, vnext, delay):
     hit = (v < vthres) & (vnext >= vthres)
-    return jax.lax.select(hit, ts + delay, -1.)
+    del dt
+    return jax.lax.select(hit, t + delay, -1.)
 
 @spike_detect.defjvp
 def spike_detect_vjp(primals, tangents):
-    dt, ts, vthres, v, vnext, delay = primals
-    _, _, _, v_dot, vnext_dot, delay_t = tangents
-    del vnext_dot
+    dt, t, vthres, v, vnext, delay = primals
+    _, _, _, v_t, vnext_t, delay_t = tangents
+    del vnext_t
     dvdt = (vnext - v) / dt
     hit = (v < vthres) & (vnext >= vthres)
-    primal_out = jax.lax.select(hit, ts + delay, -1.)
-    dvdt_safe = jnp.where(dvdt == 0, 1, dvdt) # wrong but no nans
-    tangent_out = jax.lax.select(hit, - 1/dvdt_safe * v_dot + delay_t, 0.)
+    primal_out = jax.lax.select(hit, t + delay, -1.)
+    dvdt_safe = jnp.where(dvdt == 0, 1, dvdt) # wrong but no nans and can't happen in case hit==1
+    tangent_out = jax.lax.select(hit, - 1/dvdt_safe * v_t + delay_t, 0.)
     return primal_out, tangent_out
 
 @jax.custom_jvp

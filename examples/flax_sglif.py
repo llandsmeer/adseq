@@ -4,38 +4,22 @@ import jax.numpy as jnp
 import optax
 import flax.linen as nn
 
-# {'params': {
-# 'layers_0': {'model': {
-#     'layers_1': {
-#         'delay': Array([-0.0766072, -0.0766072, -0.0766072, -0.0766072, -0.0766072,
-#                         -0.0766072, -0.0766072, -0.0766072], dtype=float32)},
-#     'layers_2': {'weight':
-#                  Array([-0.07662244, -0.0766072 , -0.07637569, -0.0764192 , -0.0766072 ,
-#                         -0.0766072 , -0.07662807, -0.07663447], dtype=float32)}}},
-# 'layers_3': {'model': {
-#     'layers_1': {
-#         'delay': Array([-0.09954435, -0.26070797, -0.0766072 , -0.07676826, -0.03020217,
-#                         -0.0766072 , -0.0766072 , -0.06262859], dtype=float32)},
-#     'layers_2': {
-#         'weight': Array([-0.08041628, -0.08316632, -0.0766072 , -0.08608952, -0.068454  ,
-#                         -0.0766072 , -0.0766072 , -0.08122645], dtype=float32)}}}}}
-
 import adseq.bridges.flax_bridge as adseq
 
 dt = 0.1
 model = adseq.Sequential([
         # Hidden layer 1
-        adseq.DenseInput(dt, 4,
+        adseq.DenseInput(dt, 8,
             weight_init=partial(jax.random.uniform, minval=-0.5, maxval=2.0),
             queue=adseq.implementations.SingleSpike),
         adseq.SurrogateLIF(dt),
         adseq.SingleSpikeFilter(dt),
         # Hidden layer 2
-        ## adseq.Dense(dt, 4,
-        ##     weight_init=partial(jax.random.uniform, minval=-0.5, maxval=2.0),
-        ##     queue=adseq.implementations.SingleSpike),
-        ## adseq.SurrogateLIF(dt),
-        ## adseq.SingleSpikeFilter(dt),
+        adseq.Dense(dt, 4,
+            weight_init=partial(jax.random.uniform, minval=-0.5, maxval=2.0),
+            queue=adseq.implementations.SingleSpike),
+        adseq.SurrogateLIF(dt),
+        adseq.SingleSpikeFilter(dt),
         # Output layer
         adseq.Dense(dt, 2, weight_init=nn.initializers.uniform(1.5)),
         adseq.SurrogateLIF(dt),
@@ -62,11 +46,11 @@ params = model.init(jax.random.key(0), None, jnp.zeros(xs[0].shape[1]))
 def loss(params, x, y, out=False):
     ttfs: jax.Array = model.apply(params, x, method='trace')[-1]
     loss = optax.softmax_cross_entropy_with_integer_labels(ttfs, y)
-    #if out: jax.debug.print('{} {}', ttfs, loss)
+    jax.debug.print('{} {}', ttfs, loss)
     return loss, jnp.where(ttfs[0] == ttfs[1], 0.5, ttfs[0] < ttfs[1])
 
 
-optimizer = optax.adam(learning_rate=1e-3)
+optimizer = optax.adam(learning_rate=1e-1)
 opt_state = optimizer.init(params)
 
 @jax.jit
@@ -74,14 +58,13 @@ def step(params, opt_state, x, y):
     def batched_loss(params):
         ls, o = jax.vmap(loss, in_axes=[None, 0, 0])(params, x, y)
         return ls.sum(), (o == y).mean()
-    jax.vmap(loss)
     (l, o), (g, _o) = batched_loss(params), \
                       jax.jacfwd(batched_loss, has_aux=True)(params)
     updates, opt_state = optimizer.update(g, opt_state)
     params = optax.apply_updates(params, updates)
     return params, opt_state, l, g, o
 
-for epoch in range(1000):
+for epoch in range(10000):
     print()
     correct = 0
     half = 0
@@ -92,6 +75,6 @@ for epoch in range(1000):
     #trace.append(o)
         #print(g)
     #print(100 * correct / 4, '% |', *trace, '|', ys, '(', half, ')')
-    print(g)
+    # print(g)
     print(o, l)
 

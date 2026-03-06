@@ -16,9 +16,9 @@ class StaticMultiSynapse(abc.ABC):
     @abc.abstractmethod
     def isyn(self) -> jax.Array: ...
     @abc.abstractmethod
-    def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms) -> typing.Self: ... # type: ignore
+    def timestep_spike_detect_pre(self, t_ms, v, vnext, delay_ms) -> typing.Self: ... # type: ignore
     @abc.abstractmethod
-    def timestep_static_spike(self, ts, s, delay_ms) -> typing.Self: ... # type: ignore
+    def timestep_static_spike(self, t_ms, s, delay_ms) -> typing.Self: ... # type: ignore
 
 
 TTFSCarry: typing.TypeAlias = tuple[jax.Array, int] | tuple[jax.Array, int, jax.Array]
@@ -164,7 +164,7 @@ class DelayedThresholdSynapse(nn.Module):
             syn, ts = carry
         delay = self.delay_activation(self.param('delay', self.delay_init, v.shape))
         isyn = syn.isyn
-        syn = syn.timestep_spike_detect_pre(ts=ts, v=v, vnext=vnext, delay_ms=delay)
+        syn = syn.timestep_spike_detect_pre(t_ms=self.dt*ts, v=v, vnext=vnext, delay_ms=delay)
         if len(carry) == 3:
             return (syn, ts+1, vnext), isyn
         else:
@@ -198,7 +198,7 @@ class DelayedStaticSynapse(nn.Module):
         syn, ts = carry
         delay = self.delay_activation(self.param('delay', self.delay_init, s.shape))
         isyn = syn.isyn
-        syn = syn.timestep_static_spike(ts=ts, s=s, delay_ms=delay)
+        syn = syn.timestep_static_spike(t_ms=self.dt*ts, s=s, delay_ms=delay)
         return (syn, ts+1), isyn
 
 class SurrogateLIF(nn.Module):
