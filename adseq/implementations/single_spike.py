@@ -50,3 +50,53 @@ def _pop_grad(primals, tangents):
                          lambda: self),
             self_t.last_spike)
 del _pop_grad
+
+### @jax.custom_vjp
+### def _enqueue(self: SingleSpike, n: float):
+###     return SingleSpike(jnp.array(n, dtype=self.last_spike.dtype))
+### def _enqueue_fwd(self: SingleSpike, n: float):
+###     out = SingleSpike(jnp.array(n, dtype=self.last_spike.dtype))
+###     return out, None
+### def _enqueue_bwd(res, g):
+###     return (
+###         SingleSpike(jnp.array(0, dtype=g.last_spike.dtype)),
+###         g.last_spike
+###     )
+### _enqueue.defvjp(_enqueue_fwd, _enqueue_bwd)
+
+### @jax.custom_vjp
+### def _pop(self: SingleSpike, n: float):
+###     hit = self.last_spike <= n
+###     return (
+###         jax.lax.cond(
+###             hit,
+###             lambda: SingleSpike(jnp.array(INT_MAX, dtype=self.last_spike.dtype)),
+###             lambda: self,
+###         ),
+###         hit.astype(self.last_spike.dtype),
+###     )
+### 
+### def _pop_fwd(self: SingleSpike, n: float):
+###     hit = self.last_spike <= n
+###     out = (
+###         jax.lax.cond(
+###             hit,
+###             lambda: SingleSpike(jnp.array(INT_MAX, dtype=self.last_spike.dtype)),
+###             lambda: self,
+###         ),
+###         hit.astype(self.last_spike.dtype),
+###     )
+###     return out, (hit,)
+### 
+### 
+### def _pop_bwd(res, g):
+###     (hit,) = res
+###     g_state, g_hit = g
+###     dtype = g_state.last_spike.dtype
+###     d_self = SingleSpike(
+###         jnp.where(hit, 0, g_state.last_spike)
+###     )
+###     d_n = jnp.array(0, dtype=dtype)
+###     return d_self, d_n
+### 
+### _pop.defvjp(_pop_fwd, _pop_bwd)

@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>adseq.bridges.flax_bridge API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>adseq.bridges.flax_bridge</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="adseq.bridges.flax_bridge.superspike"><code class="name flex">
+<span>def <span class="ident">superspike</span></span>(<span>x)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@jax.custom_jvp
+def superspike(x):
+    &#39;doi.dx/10.1162/neco_a_01086&#39;
+    return jnp.where(x &lt; 0, 0.0, 1.0)</code></pre>
+</details>
+<div class="desc"><p>doi.dx/10.1162/neco_a_01086</p></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.superspike_jvp"><code class="name flex">
+<span>def <span class="ident">superspike_jvp</span></span>(<span>primals, tangents)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@superspike.defjvp
+def superspike_jvp(primals, tangents):
+    (x,), (x_dot,) = primals, tangents
+    primal_out = jnp.where(x &lt; 0, 0.0, 1.0)
+    tangent_out = x_dot / (jnp.abs(x)+1)**2
+    return primal_out, tangent_out</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse"><code class="flex name class">
+<span>class <span class="ident">DelayedStaticSynapse</span></span>
+<span>(</span><span>dt: float,<br>tau_syn1_ms: float = 0.5,<br>tau_syn2_ms: float = 2.0,<br>max_delay: float = 20.0,<br>delay_init: jax.nn.initializers.Initializer | Callable[..., typing.Any] = &lt;function normal.&lt;locals&gt;.init&gt;,<br>queue: type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>] = adseq.implementations.fifo_ring.FIFORing[4],<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DelayedStaticSynapse(nn.Module):
+    &#39;Plain delayed synapse for static data (non neuron produced) delays&#39;
+    dt: float
+    tau_syn1_ms: float = 0.5
+    tau_syn2_ms: float = 2.0
+    max_delay: float = 20.
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
+    delay_activation = lambda self, x: self.max_delay * (1 + nn.tanh(x))
+    queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
+
+    def init_carry(self, s) -&gt; DelaySynapseCarry:
+        &#39;Example input s&#39;
+        syn = synapse2.mk_synapse2s(self.queue,
+                                   vthres=0.0,
+                                   tau_syn1_ms=self.tau_syn1_ms,
+                                   tau_syn2_ms=self.tau_syn2_ms,
+                                   dt_ms=self.dt,
+                                   n=len(s),
+                max_delay_ms=self.max_delay)
+        return syn, 0
+
+    @nn.compact
+    def __call__(self, carry: DelaySynapseCarry, s: jax.Array) -&gt; tuple[DelaySynapseCarry, jax.Array]:
+        &#39;s is a binary indicator for spikes (1 meaning spike, 0 no input spike)&#39;
+        assert len(carry) == 2
+        syn, ts = carry
+        delay = self.delay_activation(self.param(&#39;delay&#39;, self.delay_init, s.shape))
+        isyn = syn.isyn
+        syn = syn.timestep_static_spike(ts=ts, s=s, delay_ms=delay)
+        return (syn, ts+1), isyn</code></pre>
+</details>
+<div class="desc"><p>Plain delayed synapse for static data (non neuron produced) delays</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.max_delay"><code class="name">var <span class="ident">max_delay</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.queue"><code class="name">var <span class="ident">queue</span> : type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>]</code></dt>
+<dd>
+<div class="desc"><p>FIFORing(buffer, head, size)</p></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.tau_syn1_ms"><code class="name">var <span class="ident">tau_syn1_ms</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.tau_syn2_ms"><code class="name">var <span class="ident">tau_syn2_ms</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.delay_activation"><code class="name flex">
+<span>def <span class="ident">delay_activation</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">delay_activation = lambda self, x: self.max_delay * (1 + nn.tanh(x))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.delay_init"><code class="name flex">
+<span>def <span class="ident">delay_init</span></span>(<span>key: Array,<br>shape: core.Shape,<br>dtype: DTypeLikeInexact | None = None,<br>out_sharding: OutShardingType = None) ‑> jax.Array</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init(key: Array,
+         shape: core.Shape,
+         dtype: DTypeLikeInexact | None = dtype,
+         out_sharding: OutShardingType = None) -&gt; Array:
+  dtype = dtypes.default_float_dtype() if dtype is None else dtype
+  return random.normal(key, shape, dtype,
+                       out_sharding=out_sharding) * jnp.array(stddev, dtype)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedStaticSynapse.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, s) ‑> tuple[<a title="adseq.bridges.flax_bridge.StaticMultiSynapse" href="#adseq.bridges.flax_bridge.StaticMultiSynapse">StaticMultiSynapse</a>, int] | tuple[<a title="adseq.bridges.flax_bridge.StaticMultiSynapse" href="#adseq.bridges.flax_bridge.StaticMultiSynapse">StaticMultiSynapse</a>, int, jax.Array]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, s) -&gt; DelaySynapseCarry:
+    &#39;Example input s&#39;
+    syn = synapse2.mk_synapse2s(self.queue,
+                               vthres=0.0,
+                               tau_syn1_ms=self.tau_syn1_ms,
+                               tau_syn2_ms=self.tau_syn2_ms,
+                               dt_ms=self.dt,
+                               n=len(s),
+            max_delay_ms=self.max_delay)
+    return syn, 0</code></pre>
+</details>
+<div class="desc"><p>Example input s</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse"><code class="flex name class">
+<span>class <span class="ident">DelayedThresholdSynapse</span></span>
+<span>(</span><span>dt: float,<br>tau_syn1_ms: float = 0.5,<br>tau_syn2_ms: float = 2.0,<br>max_delay: float = 20.0,<br>vthres: float = 1.0,<br>delay_init: jax.nn.initializers.Initializer | Callable[..., typing.Any] = &lt;function normal.&lt;locals&gt;.init&gt;,<br>queue: type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>] = adseq.implementations.fifo_ring.FIFORing[4],<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DelayedThresholdSynapse(nn.Module):
+    &#39;Plain delayed synapse that detects spikes given input voltage&#39;
+    dt: float
+    tau_syn1_ms: float = 0.5
+    tau_syn2_ms: float = 2.0
+    max_delay: float = 20.
+    vthres: float = 1.0
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
+    delay_activation = lambda self, x: self.max_delay * (1 + nn.tanh(x))
+    queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
+
+    def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -&gt; DelaySynapseCarry:
+        &#39;if vnext is none, we delay one timestep&#39;
+        assert len(v.shape) == 1
+        syn = synapse2.mk_synapse2s(self.queue,
+                                   vthres=self.vthres,
+                                   tau_syn1_ms=self.tau_syn1_ms,
+                                   tau_syn2_ms=self.tau_syn2_ms,
+                                   dt_ms=self.dt,
+                                   n=len(v),
+                max_delay_ms=self.max_delay)
+        if vnext is None:
+            return syn, 0, 0*v # type: ignore
+        else:
+            assert vnext.shape == v.shape
+            return syn, 0 # type: ignore
+
+    @nn.compact
+    def __call__(self, carry: DelaySynapseCarry, v: jax.Array, vnext: jax.Array|None=None) -&gt; tuple[DelaySynapseCarry, jax.Array]:
+        if vnext is None:
+            assert len(carry) == 3
+            syn, ts, vprev = carry
+            v, vnext = vprev, v
+        else:
+            assert len(carry) == 2
+            syn, ts = carry
+        delay = self.delay_activation(self.param(&#39;delay&#39;, self.delay_init, v.shape))
+        isyn = syn.isyn
+        syn = syn.timestep_spike_detect_pre(ts=ts, v=v, vnext=vnext, delay_ms=delay)
+        if len(carry) == 3:
+            return (syn, ts+1, vnext), isyn
+        else:
+            return (syn, ts+1), isyn</code></pre>
+</details>
+<div class="desc"><p>Plain delayed synapse that detects spikes given input voltage</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.max_delay"><code class="name">var <span class="ident">max_delay</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.queue"><code class="name">var <span class="ident">queue</span> : type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>]</code></dt>
+<dd>
+<div class="desc"><p>FIFORing(buffer, head, size)</p></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.tau_syn1_ms"><code class="name">var <span class="ident">tau_syn1_ms</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.tau_syn2_ms"><code class="name">var <span class="ident">tau_syn2_ms</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.vthres"><code class="name">var <span class="ident">vthres</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.delay_activation"><code class="name flex">
+<span>def <span class="ident">delay_activation</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">delay_activation = lambda self, x: self.max_delay * (1 + nn.tanh(x))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.delay_init"><code class="name flex">
+<span>def <span class="ident">delay_init</span></span>(<span>key: Array,<br>shape: core.Shape,<br>dtype: DTypeLikeInexact | None = None,<br>out_sharding: OutShardingType = None) ‑> jax.Array</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init(key: Array,
+         shape: core.Shape,
+         dtype: DTypeLikeInexact | None = dtype,
+         out_sharding: OutShardingType = None) -&gt; Array:
+  dtype = dtypes.default_float_dtype() if dtype is None else dtype
+  return random.normal(key, shape, dtype,
+                       out_sharding=out_sharding) * jnp.array(stddev, dtype)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DelayedThresholdSynapse.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, v: jax.Array, vnext: None | jax.Array = None) ‑> tuple[<a title="adseq.bridges.flax_bridge.StaticMultiSynapse" href="#adseq.bridges.flax_bridge.StaticMultiSynapse">StaticMultiSynapse</a>, int] | tuple[<a title="adseq.bridges.flax_bridge.StaticMultiSynapse" href="#adseq.bridges.flax_bridge.StaticMultiSynapse">StaticMultiSynapse</a>, int, jax.Array]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -&gt; DelaySynapseCarry:
+    &#39;if vnext is none, we delay one timestep&#39;
+    assert len(v.shape) == 1
+    syn = synapse2.mk_synapse2s(self.queue,
+                               vthres=self.vthres,
+                               tau_syn1_ms=self.tau_syn1_ms,
+                               tau_syn2_ms=self.tau_syn2_ms,
+                               dt_ms=self.dt,
+                               n=len(v),
+            max_delay_ms=self.max_delay)
+    if vnext is None:
+        return syn, 0, 0*v # type: ignore
+    else:
+        assert vnext.shape == v.shape
+        return syn, 0 # type: ignore</code></pre>
+</details>
+<div class="desc"><p>if vnext is none, we delay one timestep</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense"><code class="flex name class">
+<span>class <span class="ident">Dense</span></span>
+<span>(</span><span>dt: float,<br>nout: int | None = None,<br>weight_init: jax.nn.initializers.Initializer | Callable[..., typing.Any] = &lt;function uniform.&lt;locals&gt;.init&gt;,<br>delay_init: jax.nn.initializers.Initializer | Callable[..., typing.Any] = &lt;function normal.&lt;locals&gt;.init&gt;,<br>queue: type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>] = adseq.implementations.fifo_ring.FIFORing[4],<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Dense(nn.Module):
+    dt: float
+    nout: int | None = None
+    weight_init: nn.initializers.Initializer= nn.initializers.uniform(1.5)
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
+    queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
+    def setup(self):
+        self.model = Sequential([
+            Explode(self.nout),
+            DelayedThresholdSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+            LTIReduce(self.nout, self.weight_init)
+            ])
+    def init_carry(self, x):
+        return self.model.init_carry(x)
+
+    def __call__(self, carry, x):
+        return self.model(carry, x)</code></pre>
+</details>
+<div class="desc"><p>Dense(dt: float, nout: int | None = None, weight_init: Union[jax.nn.initializers.Initializer, collections.abc.Callable[&hellip;, Any]] = <function uniform.\<locals>.init at 0x7c04e8b2dee0>, delay_init: Union[jax.nn.initializers.Initializer, collections.abc.Callable[&hellip;, Any]] = <function normal.\<locals>.init at 0x7c04e8b2df80>, queue: type[adseq.implementations.base.BaseQueue] = <class 'adseq.implementations.fifo_ring.FIFORing[4]'>, parent: Union[flax.linen.module.Module, flax.core.scope.Scope, flax.linen.module._Sentinel, NoneType] = <flax.linen.module._Sentinel object at 0x7c04e9305ee0>, name: Optional[str] = None)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Dense.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Dense.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense.nout"><code class="name">var <span class="ident">nout</span> : int | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense.queue"><code class="name">var <span class="ident">queue</span> : type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>]</code></dt>
+<dd>
+<div class="desc"><p>FIFORing(buffer, head, size)</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Dense.delay_init"><code class="name flex">
+<span>def <span class="ident">delay_init</span></span>(<span>key: Array,<br>shape: core.Shape,<br>dtype: DTypeLikeInexact | None = None,<br>out_sharding: OutShardingType = None) ‑> jax.Array</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init(key: Array,
+         shape: core.Shape,
+         dtype: DTypeLikeInexact | None = dtype,
+         out_sharding: OutShardingType = None) -&gt; Array:
+  dtype = dtypes.default_float_dtype() if dtype is None else dtype
+  return random.normal(key, shape, dtype,
+                       out_sharding=out_sharding) * jnp.array(stddev, dtype)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, x):
+    return self.model.init_carry(x)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense.setup"><code class="name flex">
+<span>def <span class="ident">setup</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup(self):
+    self.model = Sequential([
+        Explode(self.nout),
+        DelayedThresholdSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+        LTIReduce(self.nout, self.weight_init)
+        ])</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Dense.weight_init"><code class="name flex">
+<span>def <span class="ident">weight_init</span></span>(<span>key: Array,<br>shape: core.Shape,<br>dtype: DTypeLikeInexact | None = None,<br>out_sharding: OutShardingType = None) ‑> jax.Array</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init(key: Array,
+         shape: core.Shape,
+         dtype: DTypeLikeInexact | None = dtype,
+         out_sharding: OutShardingType = None) -&gt; Array:
+  dtype = dtypes.default_float_dtype() if dtype is None else dtype
+  return random.uniform(key, shape, dtype,
+                        out_sharding=out_sharding) * jnp.array(scale, dtype)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput"><code class="flex name class">
+<span>class <span class="ident">DenseInput</span></span>
+<span>(</span><span>dt: float,<br>nout: int | None = None,<br>weight_init: jax.nn.initializers.Initializer | Callable[..., typing.Any] = &lt;function uniform.&lt;locals&gt;.init&gt;,<br>delay_init: jax.nn.initializers.Initializer | Callable[..., typing.Any] = &lt;function normal.&lt;locals&gt;.init&gt;,<br>queue: type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>] = adseq.implementations.fifo_ring.FIFORing[4],<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DenseInput(nn.Module):
+    dt: float
+    nout: int | None = None
+    weight_init: nn.initializers.Initializer= nn.initializers.uniform(1.5)
+    delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
+    queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
+    def setup(self):
+        self.model = Sequential([
+            Explode(self.nout),
+            DelayedStaticSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+            LTIReduce(self.nout, self.weight_init)
+            ])
+    def init_carry(self, x):
+        return self.model.init_carry(x)
+
+    def __call__(self, carry, x):
+        return self.model(carry, x)</code></pre>
+</details>
+<div class="desc"><p>DenseInput(dt: float, nout: int | None = None, weight_init: Union[jax.nn.initializers.Initializer, collections.abc.Callable[&hellip;, Any]] = <function uniform.\<locals>.init at 0x7c04e8b2d580>, delay_init: Union[jax.nn.initializers.Initializer, collections.abc.Callable[&hellip;, Any]] = <function normal.\<locals>.init at 0x7c04e8b2d620>, queue: type[adseq.implementations.base.BaseQueue] = <class 'adseq.implementations.fifo_ring.FIFORing[4]'>, parent: Union[flax.linen.module.Module, flax.core.scope.Scope, flax.linen.module._Sentinel, NoneType] = <flax.linen.module._Sentinel object at 0x7c04e9305ee0>, name: Optional[str] = None)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DenseInput.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DenseInput.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput.nout"><code class="name">var <span class="ident">nout</span> : int | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput.queue"><code class="name">var <span class="ident">queue</span> : type[<a title="adseq.implementations.base.BaseQueue" href="../implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>]</code></dt>
+<dd>
+<div class="desc"><p>FIFORing(buffer, head, size)</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.DenseInput.delay_init"><code class="name flex">
+<span>def <span class="ident">delay_init</span></span>(<span>key: Array,<br>shape: core.Shape,<br>dtype: DTypeLikeInexact | None = None,<br>out_sharding: OutShardingType = None) ‑> jax.Array</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init(key: Array,
+         shape: core.Shape,
+         dtype: DTypeLikeInexact | None = dtype,
+         out_sharding: OutShardingType = None) -&gt; Array:
+  dtype = dtypes.default_float_dtype() if dtype is None else dtype
+  return random.normal(key, shape, dtype,
+                       out_sharding=out_sharding) * jnp.array(stddev, dtype)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, x):
+    return self.model.init_carry(x)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput.setup"><code class="name flex">
+<span>def <span class="ident">setup</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup(self):
+    self.model = Sequential([
+        Explode(self.nout),
+        DelayedStaticSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+        LTIReduce(self.nout, self.weight_init)
+        ])</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.DenseInput.weight_init"><code class="name flex">
+<span>def <span class="ident">weight_init</span></span>(<span>key: Array,<br>shape: core.Shape,<br>dtype: DTypeLikeInexact | None = None,<br>out_sharding: OutShardingType = None) ‑> jax.Array</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init(key: Array,
+         shape: core.Shape,
+         dtype: DTypeLikeInexact | None = dtype,
+         out_sharding: OutShardingType = None) -&gt; Array:
+  dtype = dtypes.default_float_dtype() if dtype is None else dtype
+  return random.uniform(key, shape, dtype,
+                        out_sharding=out_sharding) * jnp.array(scale, dtype)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Explode"><code class="flex name class">
+<span>class <span class="ident">Explode</span></span>
+<span>(</span><span>nout: int | None = None,<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Explode(nn.Module):
+    &#39;HelperModule for Dense LTI synapses; duplicate across nout targets&#39;
+    nout: int | None = None
+    @nn.compact
+    def __call__(self, v: jax.Array):
+        assert len(v.shape) == 1
+        nout = self.nout if self.nout is not None else v.shape[-1]
+        return jnp.tile(v, nout)</code></pre>
+</details>
+<div class="desc"><p>HelperModule for Dense LTI synapses; duplicate across nout targets</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Explode.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Explode.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Explode.nout"><code class="name">var <span class="ident">nout</span> : int | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Explode.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF"><code class="flex name class">
+<span>class <span class="ident">LIF</span></span>
+<span>(</span><span>dt: float,<br>tau_mem: float = 10.0,<br>vthres: float = 1.0,<br>reset_gradient: Literal['surrogate'] = 'surrogate',<br>output: Literal['voltage'] | Literal['single_spike'] | Literal['ttfs'] | Literal['<a title="adseq.bridges.flax_bridge.superspike" href="#adseq.bridges.flax_bridge.superspike">superspike()</a>'] = 'voltage',<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LIF(nn.Module):
+    dt: float
+    tau_mem: float = 10.
+    vthres: float = 1.0
+    reset_gradient: typing.Literal[&#39;surrogate&#39;] = &#39;surrogate&#39;
+    output: typing.Literal[&#39;voltage&#39;] | typing.Literal[&#39;single_spike&#39;] | typing.Literal[&#39;ttfs&#39;] | typing.Literal[&#39;superspike&#39;] = &#39;voltage&#39;
+
+    def setup(self):
+        assert self.reset_gradient == &#39;surrogate&#39;
+        self.model = SurrogateLIF(self.dt, self.tau_mem, self.vthres)
+        if self.output == &#39;voltage&#39;:
+            self.model_output = None
+        elif self.output == &#39;superspike&#39;:
+            self.model_output = SurrogateSpikeFilter(self.dt, self.vthres)
+        elif self.output == &#39;single_spike&#39;:
+            self.model_output = SingleSpikeFilter(self.dt, self.vthres)
+        elif self.output == &#39;ttfs&#39;:
+            self.model_output = TTFSFilter(self.dt, self.vthres)
+
+    def init_carry(self, isyn):
+        carry = self.model.init_carry(isyn)
+        if self.model_output is None:
+            return carry
+        _carry, v = self.model(carry, isyn)
+        carry_output = self.model_output.init_carry(v)
+        return carry, carry_output
+
+    def __call__(self, carry, isyn):
+        if self.model_output is None:
+            carry, out = self.model(carry, isyn)
+        else:
+            c0, c1 = carry
+            c0, v = self.model(c0, isyn)
+            c1, out = self.model_output(c1, v)
+            carry = c0, c1
+        return carry, out</code></pre>
+</details>
+<div class="desc"><p>LIF(dt: float, tau_mem: float = 10.0, vthres: float = 1.0, reset_gradient: Literal['surrogate'] = 'surrogate', output: Union[Literal['voltage'], Literal['single_spike'], Literal['ttfs'], Literal['superspike']] = 'voltage', parent: Union[flax.linen.module.Module, flax.core.scope.Scope, flax.linen.module._Sentinel, NoneType] = <flax.linen.module._Sentinel object at 0x7c04e9305ee0>, name: Optional[str] = None)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.LIF.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.LIF.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF.output"><code class="name">var <span class="ident">output</span> : Literal['voltage'] | Literal['single_spike'] | Literal['ttfs'] | Literal['<a title="adseq.bridges.flax_bridge.superspike" href="#adseq.bridges.flax_bridge.superspike">superspike()</a>']</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF.reset_gradient"><code class="name">var <span class="ident">reset_gradient</span> : Literal['surrogate']</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF.tau_mem"><code class="name">var <span class="ident">tau_mem</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF.vthres"><code class="name">var <span class="ident">vthres</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.LIF.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, isyn)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, isyn):
+    carry = self.model.init_carry(isyn)
+    if self.model_output is None:
+        return carry
+    _carry, v = self.model(carry, isyn)
+    carry_output = self.model_output.init_carry(v)
+    return carry, carry_output</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LIF.setup"><code class="name flex">
+<span>def <span class="ident">setup</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup(self):
+    assert self.reset_gradient == &#39;surrogate&#39;
+    self.model = SurrogateLIF(self.dt, self.tau_mem, self.vthres)
+    if self.output == &#39;voltage&#39;:
+        self.model_output = None
+    elif self.output == &#39;superspike&#39;:
+        self.model_output = SurrogateSpikeFilter(self.dt, self.vthres)
+    elif self.output == &#39;single_spike&#39;:
+        self.model_output = SingleSpikeFilter(self.dt, self.vthres)
+    elif self.output == &#39;ttfs&#39;:
+        self.model_output = TTFSFilter(self.dt, self.vthres)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LTIReduce"><code class="flex name class">
+<span>class <span class="ident">LTIReduce</span></span>
+<span>(</span><span>nout: int | None = None,<br>weight_init: jax.nn.initializers.Initializer | Callable[..., typing.Any] = &lt;function normal.&lt;locals&gt;.init&gt;,<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LTIReduce(nn.Module):
+    &#39;HelperModule for Dense LTI synapses; weighted sum up to nout features&#39;
+    nout: int | None = None
+    weight_init: nn.initializers.Initializer = nn.initializers.normal()
+    @nn.compact
+    def __call__(self, isyn: jax.Array):
+        nsyn = isyn.shape[-1]
+        if self.nout is not None:
+            nin = nsyn // self.nout
+            nout = self.nout
+        else:
+            nin = nout = int(nsyn ** 0.5)
+        assert nsyn == nin * nout
+        assert len(isyn.shape) == 1
+        weight = self.param(&#39;weight&#39;, self.weight_init, isyn.shape)
+        # isyn = (isyn * weight).reshape(nout, nin)
+        isyn = (isyn * weight).reshape(nout, nin)
+        return isyn.sum(1) # second dimension if not batched</code></pre>
+</details>
+<div class="desc"><p>HelperModule for Dense LTI synapses; weighted sum up to nout features</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.LTIReduce.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.LTIReduce.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LTIReduce.nout"><code class="name">var <span class="ident">nout</span> : int | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.LTIReduce.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.LTIReduce.weight_init"><code class="name flex">
+<span>def <span class="ident">weight_init</span></span>(<span>key: Array,<br>shape: core.Shape,<br>dtype: DTypeLikeInexact | None = None,<br>out_sharding: OutShardingType = None) ‑> jax.Array</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init(key: Array,
+         shape: core.Shape,
+         dtype: DTypeLikeInexact | None = dtype,
+         out_sharding: OutShardingType = None) -&gt; Array:
+  dtype = dtypes.default_float_dtype() if dtype is None else dtype
+  return random.normal(key, shape, dtype,
+                       out_sharding=out_sharding) * jnp.array(stddev, dtype)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Sequential"><code class="flex name class">
+<span>class <span class="ident">Sequential</span></span>
+<span>(</span><span>layers: List[flax.linen.module.Module],<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Sequential(nn.Module):
+    layers: typing.List[nn.Module]
+
+    def init_carry(self, x):
+        cs = []
+        for layer in self.layers:
+            if hasattr(layer, &#39;init_carry&#39;):
+                carry = layer.init_carry(x)
+                _carry, x = layer(carry, x)
+            else:
+                carry = None
+                x = layer(x)
+            cs.append(carry)
+        return cs
+
+    def trace(self, xs, output_all=False):
+        carry = self.init_carry(xs[0])
+        carry, ys = jax.lax.scan(lambda c, x: self.__call__(c, x, output_all), carry, xs)
+        return ys
+
+    def __call__(self, carry, x, output_all=False):
+        if carry is None: carry = self.init_carry(x)
+        carry_out = []
+        if output_all:
+            output = []
+        for c, layer in zip(carry, self.layers):
+            if c is None:
+                x = layer(x)
+            else:
+                c, x = layer(c, x)
+            carry_out.append(c)
+            if output_all:
+                output.append(x)
+        if output_all:
+            return carry_out, output
+        return carry_out, x</code></pre>
+</details>
+<div class="desc"><p>Sequential(layers: List[flax.linen.module.Module], parent: Union[flax.linen.module.Module, flax.core.scope.Scope, flax.linen.module._Sentinel, NoneType] = <flax.linen.module._Sentinel object at 0x7c04e9305ee0>, name: Optional[str] = None)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Sequential.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Sequential.layers"><code class="name">var <span class="ident">layers</span> : List[flax.linen.module.Module]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Sequential.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Sequential.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.Sequential.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, x)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, x):
+    cs = []
+    for layer in self.layers:
+        if hasattr(layer, &#39;init_carry&#39;):
+            carry = layer.init_carry(x)
+            _carry, x = layer(carry, x)
+        else:
+            carry = None
+            x = layer(x)
+        cs.append(carry)
+    return cs</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.Sequential.trace"><code class="name flex">
+<span>def <span class="ident">trace</span></span>(<span>self, xs, output_all=False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def trace(self, xs, output_all=False):
+    carry = self.init_carry(xs[0])
+    carry, ys = jax.lax.scan(lambda c, x: self.__call__(c, x, output_all), carry, xs)
+    return ys</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SingleSpikeFilter"><code class="flex name class">
+<span>class <span class="ident">SingleSpikeFilter</span></span>
+<span>(</span><span>dt: float = None,<br>vthres: float = 1.0,<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SingleSpikeFilter(nn.Module):
+    &#39;Passthrough voltage until spike, then hold&#39;
+    dt: float = None
+    vthres: float = 1.0
+
+    def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -&gt; TTFSCarry:
+        &#39;if vnext is none, we delay one timestep&#39;
+        assert len(v.shape) == 1
+        if vnext is None:
+            return 0*v, 0, 0*v
+        else:
+            assert vnext.shape == v.shape
+            return 0*v, 0
+
+    @nn.compact
+    def __call__(self, carry: LIFCarry, v: jax.Array, vnext: jax.Array|None=None) -&gt; tuple[TTFSCarry, jax.Array]:
+        if vnext is None:
+            assert len(carry) == 3
+            vhold, ts, vprev = carry
+            v, vnext = vprev, v
+        else:
+            assert len(carry) == 2
+            vhold, ts = carry
+        out = jnp.where(vhold &gt;= self.vthres, vhold, v)
+        vhold = jnp.where(vhold &gt;= self.vthres, vhold, jax.lax.stop_gradient(v))
+        if len(carry) == 3:
+            return (vhold, ts+1, vnext), out
+        else:
+            return (vhold, ts+1), out</code></pre>
+</details>
+<div class="desc"><p>Passthrough voltage until spike, then hold</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SingleSpikeFilter.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SingleSpikeFilter.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SingleSpikeFilter.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SingleSpikeFilter.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SingleSpikeFilter.vthres"><code class="name">var <span class="ident">vthres</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SingleSpikeFilter.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, v: jax.Array, vnext: None | jax.Array = None) ‑> tuple[jax.Array, int] | tuple[jax.Array, int, jax.Array]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -&gt; TTFSCarry:
+    &#39;if vnext is none, we delay one timestep&#39;
+    assert len(v.shape) == 1
+    if vnext is None:
+        return 0*v, 0, 0*v
+    else:
+        assert vnext.shape == v.shape
+        return 0*v, 0</code></pre>
+</details>
+<div class="desc"><p>if vnext is none, we delay one timestep</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.StaticMultiSynapse"><code class="flex name class">
+<span>class <span class="ident">StaticMultiSynapse</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class StaticMultiSynapse(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def isyn(self) -&gt; jax.Array: ...
+    @abc.abstractmethod
+    def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms) -&gt; typing.Self: ... # type: ignore
+    @abc.abstractmethod
+    def timestep_static_spike(self, ts, s, delay_ms) -&gt; typing.Self: ... # type: ignore</code></pre>
+</details>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.StaticMultiSynapse.isyn"><code class="name">prop <span class="ident">isyn</span> : jax.Array</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+@abc.abstractmethod
+def isyn(self) -&gt; jax.Array: ...</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.StaticMultiSynapse.timestep_spike_detect_pre"><code class="name flex">
+<span>def <span class="ident">timestep_spike_detect_pre</span></span>(<span>self, ts, v, vnext, delay_ms) ‑> Self</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def timestep_spike_detect_pre(self, ts, v, vnext, delay_ms) -&gt; typing.Self: ... # type: ignore</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.StaticMultiSynapse.timestep_static_spike"><code class="name flex">
+<span>def <span class="ident">timestep_static_spike</span></span>(<span>self, ts, s, delay_ms) ‑> Self</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def timestep_static_spike(self, ts, s, delay_ms) -&gt; typing.Self: ... # type: ignore</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF"><code class="flex name class">
+<span>class <span class="ident">SurrogateLIF</span></span>
+<span>(</span><span>dt: float,<br>tau_mem: float = 10.0,<br>vthres: float = 1.0,<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SurrogateLIF(nn.Module):
+    dt: float
+    tau_mem: float = 10.
+    vthres: float = 1.0
+
+    def init_carry(self, isyn):
+        return isyn*0
+
+    @nn.compact
+    def __call__(self, carry: LIFCarry, isyn: jax.Array) -&gt; tuple[LIFCarry, jax.Array]:
+        v = carry
+        S = superspike(v - self.vthres)
+        beta = jnp.exp(-self.dt/self.tau_mem)
+        v_next = (1 - S) * (beta * v + isyn*self.dt)
+        return v_next, v</code></pre>
+</details>
+<div class="desc"><p>SurrogateLIF(dt: float, tau_mem: float = 10.0, vthres: float = 1.0, parent: Union[flax.linen.module.Module, flax.core.scope.Scope, flax.linen.module._Sentinel, NoneType] = <flax.linen.module._Sentinel object at 0x7c04e9305ee0>, name: Optional[str] = None)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF.tau_mem"><code class="name">var <span class="ident">tau_mem</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF.vthres"><code class="name">var <span class="ident">vthres</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SurrogateLIF.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, isyn)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, isyn):
+    return isyn*0</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateSpikeFilter"><code class="flex name class">
+<span>class <span class="ident">SurrogateSpikeFilter</span></span>
+<span>(</span><span>dt: float = None,<br>vthres: float = 1.0,<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SurrogateSpikeFilter(nn.Module):
+    dt: float = None
+    vthres: float = 1.0
+    def init_carry(self, v): return None
+    def __call__(self, carry, v):
+        S = superspike(v - self.vthres)
+        return carry, S</code></pre>
+</details>
+<div class="desc"><p>SurrogateSpikeFilter(dt: float = None, vthres: float = 1.0, parent: Union[flax.linen.module.Module, flax.core.scope.Scope, flax.linen.module._Sentinel, NoneType] = <flax.linen.module._Sentinel object at 0x7c04e9305ee0>, name: Optional[str] = None)</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SurrogateSpikeFilter.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SurrogateSpikeFilter.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateSpikeFilter.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateSpikeFilter.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.SurrogateSpikeFilter.vthres"><code class="name">var <span class="ident">vthres</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.SurrogateSpikeFilter.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, v)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, v): return None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="adseq.bridges.flax_bridge.TTFSFilter"><code class="flex name class">
+<span>class <span class="ident">TTFSFilter</span></span>
+<span>(</span><span>dt: float,<br>vthres: float = 1.0,<br>parent: flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None = &lt;flax.linen.module._Sentinel object&gt;,<br>name: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TTFSFilter(nn.Module):
+    &#39;Receives voltages, outputs differentiable first spike time&#39;
+    dt: float
+    vthres: float = 1.0
+
+    def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -&gt; TTFSCarry:
+        &#39;if vnext is none, we delay one timestep&#39;
+        assert len(v.shape) == 1
+        if vnext is None:
+            return -1 + 0*v, 0, 0*v
+        else:
+            assert vnext.shape == v.shape
+            return -1 + 0*v, 0
+
+    @nn.compact
+    def __call__(self, carry: LIFCarry, v: jax.Array, vnext: jax.Array|None=None) -&gt; tuple[TTFSCarry, jax.Array]:
+        if vnext is None:
+            assert len(carry) == 3
+            ttfs, ts, vprev = carry
+            v, vnext = vprev, v
+        else:
+            assert len(carry) == 2
+            ttfs, ts = carry
+        ttfs: jax.Array
+        tpost = jax.vmap(synapse2.spike_detect, in_axes=[None,None,None,0,0,None])(self.dt, self.dt*ts, self.vthres, v, vnext, 0.)
+        ttfs = jnp.where((ttfs != -1),
+                   jnp.where((tpost != -1),
+                             jnp.minimum(ttfs, tpost),
+                             ttfs),
+                         tpost)
+        if len(carry) == 3:
+            return (ttfs, ts+1, vnext), ttfs
+        else:
+            return (ttfs, ts+1), ttfs</code></pre>
+</details>
+<div class="desc"><p>Receives voltages, outputs differentiable first spike time</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>flax.linen.module.Module</li>
+<li>flax.linen.module.ModuleBase</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.TTFSFilter.scope"><code class="name">var <span class="ident">scope</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.TTFSFilter.dt"><code class="name">var <span class="ident">dt</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.TTFSFilter.name"><code class="name">var <span class="ident">name</span> : str | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.TTFSFilter.parent"><code class="name">var <span class="ident">parent</span> : flax.linen.module.Module | flax.core.scope.Scope | flax.linen.module._Sentinel | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="adseq.bridges.flax_bridge.TTFSFilter.vthres"><code class="name">var <span class="ident">vthres</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="adseq.bridges.flax_bridge.TTFSFilter.init_carry"><code class="name flex">
+<span>def <span class="ident">init_carry</span></span>(<span>self, v: jax.Array, vnext: None | jax.Array = None) ‑> tuple[jax.Array, int] | tuple[jax.Array, int, jax.Array]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_carry(self, v:jax.Array, vnext: jax.Array|None=None) -&gt; TTFSCarry:
+    &#39;if vnext is none, we delay one timestep&#39;
+    assert len(v.shape) == 1
+    if vnext is None:
+        return -1 + 0*v, 0, 0*v
+    else:
+        assert vnext.shape == v.shape
+        return -1 + 0*v, 0</code></pre>
+</details>
+<div class="desc"><p>if vnext is none, we delay one timestep</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="adseq.bridges" href="index.html">adseq.bridges</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="adseq.bridges.flax_bridge.superspike" href="#adseq.bridges.flax_bridge.superspike">superspike</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.superspike_jvp" href="#adseq.bridges.flax_bridge.superspike_jvp">superspike_jvp</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse">DelayedStaticSynapse</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.delay_activation" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.delay_activation">delay_activation</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.delay_init" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.delay_init">delay_init</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.dt" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.init_carry" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.max_delay" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.max_delay">max_delay</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.name" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.parent" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.queue" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.queue">queue</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.scope" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.tau_syn1_ms" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.tau_syn1_ms">tau_syn1_ms</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedStaticSynapse.tau_syn2_ms" href="#adseq.bridges.flax_bridge.DelayedStaticSynapse.tau_syn2_ms">tau_syn2_ms</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse">DelayedThresholdSynapse</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.delay_activation" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.delay_activation">delay_activation</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.delay_init" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.delay_init">delay_init</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.dt" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.init_carry" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.max_delay" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.max_delay">max_delay</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.name" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.parent" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.queue" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.queue">queue</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.scope" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.tau_syn1_ms" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.tau_syn1_ms">tau_syn1_ms</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.tau_syn2_ms" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.tau_syn2_ms">tau_syn2_ms</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DelayedThresholdSynapse.vthres" href="#adseq.bridges.flax_bridge.DelayedThresholdSynapse.vthres">vthres</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.Dense" href="#adseq.bridges.flax_bridge.Dense">Dense</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.Dense.delay_init" href="#adseq.bridges.flax_bridge.Dense.delay_init">delay_init</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.dt" href="#adseq.bridges.flax_bridge.Dense.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.init_carry" href="#adseq.bridges.flax_bridge.Dense.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.name" href="#adseq.bridges.flax_bridge.Dense.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.nout" href="#adseq.bridges.flax_bridge.Dense.nout">nout</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.parent" href="#adseq.bridges.flax_bridge.Dense.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.queue" href="#adseq.bridges.flax_bridge.Dense.queue">queue</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.scope" href="#adseq.bridges.flax_bridge.Dense.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.setup" href="#adseq.bridges.flax_bridge.Dense.setup">setup</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Dense.weight_init" href="#adseq.bridges.flax_bridge.Dense.weight_init">weight_init</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.DenseInput" href="#adseq.bridges.flax_bridge.DenseInput">DenseInput</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.delay_init" href="#adseq.bridges.flax_bridge.DenseInput.delay_init">delay_init</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.dt" href="#adseq.bridges.flax_bridge.DenseInput.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.init_carry" href="#adseq.bridges.flax_bridge.DenseInput.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.name" href="#adseq.bridges.flax_bridge.DenseInput.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.nout" href="#adseq.bridges.flax_bridge.DenseInput.nout">nout</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.parent" href="#adseq.bridges.flax_bridge.DenseInput.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.queue" href="#adseq.bridges.flax_bridge.DenseInput.queue">queue</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.scope" href="#adseq.bridges.flax_bridge.DenseInput.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.setup" href="#adseq.bridges.flax_bridge.DenseInput.setup">setup</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.DenseInput.weight_init" href="#adseq.bridges.flax_bridge.DenseInput.weight_init">weight_init</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.Explode" href="#adseq.bridges.flax_bridge.Explode">Explode</a></code></h4>
+<ul class="">
+<li><code><a title="adseq.bridges.flax_bridge.Explode.name" href="#adseq.bridges.flax_bridge.Explode.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Explode.nout" href="#adseq.bridges.flax_bridge.Explode.nout">nout</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Explode.parent" href="#adseq.bridges.flax_bridge.Explode.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Explode.scope" href="#adseq.bridges.flax_bridge.Explode.scope">scope</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.LIF" href="#adseq.bridges.flax_bridge.LIF">LIF</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.LIF.dt" href="#adseq.bridges.flax_bridge.LIF.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.init_carry" href="#adseq.bridges.flax_bridge.LIF.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.name" href="#adseq.bridges.flax_bridge.LIF.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.output" href="#adseq.bridges.flax_bridge.LIF.output">output</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.parent" href="#adseq.bridges.flax_bridge.LIF.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.reset_gradient" href="#adseq.bridges.flax_bridge.LIF.reset_gradient">reset_gradient</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.scope" href="#adseq.bridges.flax_bridge.LIF.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.setup" href="#adseq.bridges.flax_bridge.LIF.setup">setup</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.tau_mem" href="#adseq.bridges.flax_bridge.LIF.tau_mem">tau_mem</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LIF.vthres" href="#adseq.bridges.flax_bridge.LIF.vthres">vthres</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.LTIReduce" href="#adseq.bridges.flax_bridge.LTIReduce">LTIReduce</a></code></h4>
+<ul class="">
+<li><code><a title="adseq.bridges.flax_bridge.LTIReduce.name" href="#adseq.bridges.flax_bridge.LTIReduce.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LTIReduce.nout" href="#adseq.bridges.flax_bridge.LTIReduce.nout">nout</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LTIReduce.parent" href="#adseq.bridges.flax_bridge.LTIReduce.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LTIReduce.scope" href="#adseq.bridges.flax_bridge.LTIReduce.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.LTIReduce.weight_init" href="#adseq.bridges.flax_bridge.LTIReduce.weight_init">weight_init</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.Sequential" href="#adseq.bridges.flax_bridge.Sequential">Sequential</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.Sequential.init_carry" href="#adseq.bridges.flax_bridge.Sequential.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Sequential.layers" href="#adseq.bridges.flax_bridge.Sequential.layers">layers</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Sequential.name" href="#adseq.bridges.flax_bridge.Sequential.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Sequential.parent" href="#adseq.bridges.flax_bridge.Sequential.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Sequential.scope" href="#adseq.bridges.flax_bridge.Sequential.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.Sequential.trace" href="#adseq.bridges.flax_bridge.Sequential.trace">trace</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.SingleSpikeFilter" href="#adseq.bridges.flax_bridge.SingleSpikeFilter">SingleSpikeFilter</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.SingleSpikeFilter.dt" href="#adseq.bridges.flax_bridge.SingleSpikeFilter.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SingleSpikeFilter.init_carry" href="#adseq.bridges.flax_bridge.SingleSpikeFilter.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SingleSpikeFilter.name" href="#adseq.bridges.flax_bridge.SingleSpikeFilter.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SingleSpikeFilter.parent" href="#adseq.bridges.flax_bridge.SingleSpikeFilter.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SingleSpikeFilter.scope" href="#adseq.bridges.flax_bridge.SingleSpikeFilter.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SingleSpikeFilter.vthres" href="#adseq.bridges.flax_bridge.SingleSpikeFilter.vthres">vthres</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.StaticMultiSynapse" href="#adseq.bridges.flax_bridge.StaticMultiSynapse">StaticMultiSynapse</a></code></h4>
+<ul class="">
+<li><code><a title="adseq.bridges.flax_bridge.StaticMultiSynapse.isyn" href="#adseq.bridges.flax_bridge.StaticMultiSynapse.isyn">isyn</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.StaticMultiSynapse.timestep_spike_detect_pre" href="#adseq.bridges.flax_bridge.StaticMultiSynapse.timestep_spike_detect_pre">timestep_spike_detect_pre</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.StaticMultiSynapse.timestep_static_spike" href="#adseq.bridges.flax_bridge.StaticMultiSynapse.timestep_static_spike">timestep_static_spike</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.SurrogateLIF" href="#adseq.bridges.flax_bridge.SurrogateLIF">SurrogateLIF</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateLIF.dt" href="#adseq.bridges.flax_bridge.SurrogateLIF.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateLIF.init_carry" href="#adseq.bridges.flax_bridge.SurrogateLIF.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateLIF.name" href="#adseq.bridges.flax_bridge.SurrogateLIF.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateLIF.parent" href="#adseq.bridges.flax_bridge.SurrogateLIF.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateLIF.scope" href="#adseq.bridges.flax_bridge.SurrogateLIF.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateLIF.tau_mem" href="#adseq.bridges.flax_bridge.SurrogateLIF.tau_mem">tau_mem</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateLIF.vthres" href="#adseq.bridges.flax_bridge.SurrogateLIF.vthres">vthres</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.SurrogateSpikeFilter" href="#adseq.bridges.flax_bridge.SurrogateSpikeFilter">SurrogateSpikeFilter</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateSpikeFilter.dt" href="#adseq.bridges.flax_bridge.SurrogateSpikeFilter.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateSpikeFilter.init_carry" href="#adseq.bridges.flax_bridge.SurrogateSpikeFilter.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateSpikeFilter.name" href="#adseq.bridges.flax_bridge.SurrogateSpikeFilter.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateSpikeFilter.parent" href="#adseq.bridges.flax_bridge.SurrogateSpikeFilter.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateSpikeFilter.scope" href="#adseq.bridges.flax_bridge.SurrogateSpikeFilter.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.SurrogateSpikeFilter.vthres" href="#adseq.bridges.flax_bridge.SurrogateSpikeFilter.vthres">vthres</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="adseq.bridges.flax_bridge.TTFSFilter" href="#adseq.bridges.flax_bridge.TTFSFilter">TTFSFilter</a></code></h4>
+<ul class="two-column">
+<li><code><a title="adseq.bridges.flax_bridge.TTFSFilter.dt" href="#adseq.bridges.flax_bridge.TTFSFilter.dt">dt</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.TTFSFilter.init_carry" href="#adseq.bridges.flax_bridge.TTFSFilter.init_carry">init_carry</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.TTFSFilter.name" href="#adseq.bridges.flax_bridge.TTFSFilter.name">name</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.TTFSFilter.parent" href="#adseq.bridges.flax_bridge.TTFSFilter.parent">parent</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.TTFSFilter.scope" href="#adseq.bridges.flax_bridge.TTFSFilter.scope">scope</a></code></li>
+<li><code><a title="adseq.bridges.flax_bridge.TTFSFilter.vthres" href="#adseq.bridges.flax_bridge.TTFSFilter.vthres">vthres</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

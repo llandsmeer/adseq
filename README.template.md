@@ -101,30 +101,7 @@ ttfs = model.apply(params, x, method='trace')
 
 # Module Documentation
 
- - [docs](https://llandsmeer.github.io/adseq/index.html)
-     - [synapse2](https://llandsmeer.github.io/adseq/synapse2.html)
-     - [synapse](https://llandsmeer.github.io/adseq/synapse.html)
-     - [bridges](https://llandsmeer.github.io/adseq/bridges/index.html)
-         - [jaxley_bridge](https://llandsmeer.github.io/adseq/bridges/jaxley_bridge.html)
-         - [tryv](https://llandsmeer.github.io/adseq/bridges/tryv.html)
-         - [flax_bridge](https://llandsmeer.github.io/adseq/bridges/flax_bridge.html)
-     - [benchmarks](https://llandsmeer.github.io/adseq/benchmarks/index.html)
-         - [profile_poisson](https://llandsmeer.github.io/adseq/benchmarks/profile_poisson.html)
-         - [profile_recurrent_snn](https://llandsmeer.github.io/adseq/benchmarks/profile_recurrent_snn.html)
-         - [profile_jaxley](https://llandsmeer.github.io/adseq/benchmarks/profile_jaxley.html)
-         - [profile_lossy_queues](https://llandsmeer.github.io/adseq/benchmarks/profile_lossy_queues.html)
-     - [implementations](https://llandsmeer.github.io/adseq/implementations/index.html)
-         - [bgpq1](https://llandsmeer.github.io/adseq/implementations/bgpq1.html)
-         - [fifo_ring](https://llandsmeer.github.io/adseq/implementations/fifo_ring.html)
-         - [ring](https://llandsmeer.github.io/adseq/implementations/ring.html)
-         - [single_spike](https://llandsmeer.github.io/adseq/implementations/single_spike.html)
-         - [sorted_array](https://llandsmeer.github.io/adseq/implementations/sorted_array.html)
-         - [single_spike_keep](https://llandsmeer.github.io/adseq/implementations/single_spike_keep.html)
-         - [lossy_ring](https://llandsmeer.github.io/adseq/implementations/lossy_ring.html)
-         - [bitarray32](https://llandsmeer.github.io/adseq/implementations/bitarray32.html)
-         - [binary_heap](https://llandsmeer.github.io/adseq/implementations/binary_heap.html)
-         - [do_nothing](https://llandsmeer.github.io/adseq/implementations/do_nothing.html)
-         - [base](https://llandsmeer.github.io/adseq/implementations/base.html)
+DOCS
 
 ## Citation
 
