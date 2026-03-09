@@ -10,6 +10,27 @@ __all__ = 'mk_synapse', 'mk_synapses'
 floatx = jax.numpy.array(0.).dtype
 
 def mk_synapse(Q: type[BaseQueue], *a, delay_ms, dt_ms, vthres, tau_syn_ms, **k):
+    '''
+    Construct a single simple exponential synapse
+
+    >>> syn = adseq.mk_synapse(
+    ...     adseq.SingleSpike,
+    ...     dt_ms=0.1,
+    ...     vthres=1.0,
+    ...     tau_syn_ms=1.0,
+    ...     delay_ms=100.
+    ...     )
+    >>> a = 1.0
+    >>> syn = syn.timestep_spike_detect_pre(0, 1.0-a*0.1, 1.0+a*0.1, 1.0)
+    >>> print(syn.isyn)
+    0.0
+    >>> syn = syn.timestep_spike_detect_pre(1, 0.9, 0.9, 0.0)
+    >>> print(syn.isyn)
+    1.0
+    >>> syn = syn.timestep_spike_detect_pre(2, 0.9, 0.9, 0.0)
+    >>> print(syn.isyn)
+    0.9048374
+    '''
     return _mk_synapse(Q, *a, delay_ms=delay_ms, dt_ms=dt_ms, vthres=vthres, tau_syn_ms=tau_syn_ms, **k).init()
 
 def mk_synapses(Q: type[BaseQueue], *a, delay_ms, dt_ms, vthres, tau_syn_ms, n: int, **k):

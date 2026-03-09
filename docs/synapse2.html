@@ -53,9 +53,53 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def mk_synapse2(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, **k):
+    &#39;&#39;&#39;
+    Construct a single double exponential synapse
+
+    &gt;&gt;&gt; syn = adseq.mk_synapse2(
+            adseq.SingleSpike,
+            dt_ms=0.1,
+            vthres=1.0,
+            tau_syn1_ms=1.0,
+            tau_syn2_ms=10.0,
+            max_delay_ms=100.,
+            )
+    &gt;&gt;&gt; a = 1.0
+    &gt;&gt;&gt; syn = syn.timestep_spike_detect_pre(0, 1.0-a*0.1, 1.0+a*0.1, 1.0)
+    &gt;&gt;&gt; print(syn.isyn)
+    0.0
+    &gt;&gt;&gt; syn = syn.timestep_spike_detect_pre(1, 0.9, 0.9, 0.0)
+    &gt;&gt;&gt; print(syn.isyn)
+    1.0
+    &gt;&gt;&gt; syn = syn.timestep_spike_detect_pre(2, 0.9, 0.9, 0.0)
+    &gt;&gt;&gt; print(syn.isyn)
+    0.12228451
+
+    If taking gradient w.r.t. delay_ms, put max_delay_ms and give delay_ms in the detection call
+    &#39;&#39;&#39;
     return _mk_synapse(Q, *a, dt_ms=dt_ms, vthres=vthres, tau_syn1_ms=tau_syn1_ms, tau_syn2_ms=tau_syn2_ms, **k).init()</code></pre>
 </details>
-<div class="desc"></div>
+<div class="desc"><p>Construct a single double exponential synapse</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; syn = adseq.mk_synapse2(
+        adseq.SingleSpike,
+        dt_ms=0.1,
+        vthres=1.0,
+        tau_syn1_ms=1.0,
+        tau_syn2_ms=10.0,
+        max_delay_ms=100.,
+        )
+&gt;&gt;&gt; a = 1.0
+&gt;&gt;&gt; syn = syn.timestep_spike_detect_pre(0, 1.0-a*0.1, 1.0+a*0.1, 1.0)
+&gt;&gt;&gt; print(syn.isyn)
+0.0
+&gt;&gt;&gt; syn = syn.timestep_spike_detect_pre(1, 0.9, 0.9, 0.0)
+&gt;&gt;&gt; print(syn.isyn)
+1.0
+&gt;&gt;&gt; syn = syn.timestep_spike_detect_pre(2, 0.9, 0.9, 0.0)
+&gt;&gt;&gt; print(syn.isyn)
+0.12228451
+</code></pre>
+<p>If taking gradient w.r.t. delay_ms, put max_delay_ms and give delay_ms in the detection call</p></div>
 </dd>
 <dt id="adseq.synapse2.mk_synapse2s"><code class="name flex">
 <span>def <span class="ident">mk_synapse2s</span></span>(<span>Q: type[<a title="adseq.implementations.base.BaseQueue" href="implementations/base.html#adseq.implementations.base.BaseQueue">BaseQueue</a>],<br>*a,<br>dt_ms,<br>vthres,<br>tau_syn1_ms,<br>tau_syn2_ms,<br>n: int,<br>**k)</span>

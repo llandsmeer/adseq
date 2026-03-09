@@ -53,21 +53,23 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def make_plot(imp, ax):
-    for lam in 10, 20, 50, 200:
-        dly = jnp.arange(1, 2*lam)
+    for lam in [0.01]: #, 0.05, 0.1:
+    # for lam in [0.1]:
+        dly = jnp.arange(1, int(round(0.5/lam)), 0.1)
         o = []
-        for i in range(3):
-            key=jax.random.PRNGKey(0)
-            f = jax.vmap(lambda delay: spike_drop(imp, lam=lam, delay=delay, Nevents=100, drop=20, key=key))
-            out = f(dly)
+        key = jax.random.PRNGKey(0)
+        f = jax.jit(lambda delay, key: jax.vmap(lambda delay: spike_drop(imp, lam=lam, delay=delay, Nevents=100, drop=20, key=key))(delay))
+        for i in range(10):
+            key, k = jax.random.split(key)
+            out = f(dly, k)
             o.append(out)
         o = jnp.mean(jnp.vstack(o), axis=0)
-        ax.plot(dly/lam, o*100, label=f&#39;$\\lambda$={lam}&#39;)
+        ax.plot(dly*lam, o*100, label=f&#39;$\\lambda$={lam}&#39;)
     ax.set_title(imp.__name__)
     # ax.legend()
     ax.set_ylabel(&#39;Drop rate (%)&#39;)
-    ax.set_xlabel(&#39;$d/\\lambda$ or $d\\cdot f$ &#39;)
-    ax.set_ylim(0, 100)</code></pre>
+    ax.set_xlabel(r&#39;$d \lambda$&#39;)
+    ax.set_ylim(0, 50)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -80,12 +82,11 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def mkev(lam: float, Nevents: int, key = jax.random.PRNGKey(0)):
-    Ntimesteps = lam * Nevents
-    event_stream = jnp.zeros((Ntimesteps, ), dtype=bool)
-    ts = jnp.round(jnp.cumulative_sum(
-                        jax.random.poisson(key, lam, (Nevents,))
-                        )).astype(int)
-    return event_stream.at[ts].set(True)</code></pre>
+    T = int(1/lam * Nevents)
+    counts = jax.random.poisson(key, lam=lam, shape=(T,))
+    dropped = ((counts &gt; 1) * counts).sum()
+    jax.debug.print(&#39;generator lam={} dropped={} N={}&#39;, lam, dropped, Nevents)
+    return (counts &gt; 0).astype(jnp.int32)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>

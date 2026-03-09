@@ -9,6 +9,30 @@ __all__ = 'mk_synapse2', 'mk_synapse2s'
 
 floatx = jax.numpy.array(0.).dtype
 def mk_synapse2(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, **k):
+    '''
+    Construct a single double exponential synapse
+
+    >>> syn = adseq.mk_synapse2(
+            adseq.SingleSpike,
+            dt_ms=0.1,
+            vthres=1.0,
+            tau_syn1_ms=1.0,
+            tau_syn2_ms=10.0,
+            max_delay_ms=100.,
+            )
+    >>> a = 1.0
+    >>> syn = syn.timestep_spike_detect_pre(0, 1.0-a*0.1, 1.0+a*0.1, 1.0)
+    >>> print(syn.isyn)
+    0.0
+    >>> syn = syn.timestep_spike_detect_pre(1, 0.9, 0.9, 0.0)
+    >>> print(syn.isyn)
+    1.0
+    >>> syn = syn.timestep_spike_detect_pre(2, 0.9, 0.9, 0.0)
+    >>> print(syn.isyn)
+    0.12228451
+
+    If taking gradient w.r.t. delay_ms, put max_delay_ms and give delay_ms in the detection call
+    '''
     return _mk_synapse(Q, *a, dt_ms=dt_ms, vthres=vthres, tau_syn1_ms=tau_syn1_ms, tau_syn2_ms=tau_syn2_ms, **k).init()
 
 def mk_synapse2s(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, n: int, **k):
@@ -17,9 +41,6 @@ def mk_synapse2s(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms
 ###
 
 def _mk_synapse(Q: type[BaseQueue], *a, max_delay_ms, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms, **k):
-    '''
-    If taking gradient w.r.t. delay_ms, put max_delay_ms
-    '''
     assert max_delay_ms is not None
     alpha = jnp.exp(- dt_ms / tau_syn1_ms)
     beta = jnp.exp(- dt_ms / tau_syn2_ms)
