@@ -56,6 +56,6 @@ def _pop_grad(primals, tangents):
             hit.astype(self.last_spike.dtype)), \
            (jax.lax.cond(hit,
                          lambda: SingleSpikeKeep(jnp.array(0, dtype=self.last_spike.dtype)),
-                         lambda: self),
+                         lambda: self_t),
             self_t.last_spike)
 del _pop_grad

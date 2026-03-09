@@ -135,11 +135,12 @@ def time_to_timestep_keep_gradient_jvp(primals, tangents):
 @jax.custom_jvp
 def apply_recv_gradient(hit, tau_syn):
     del tau_syn
-    return hit
+    return jax.lax.select(hit != 0, 1.0, 0.0)
 @apply_recv_gradient.defjvp
 def apply_recv_gradient_jvp(primals, tangents):
     hit, tau_syn = primals
     tpost_t, tau_syn_t = tangents
     del tau_syn_t
-    return hit, hit * (1/tau_syn * tpost_t)
+    return jax.lax.select(hit != 0, 1.0, 0.0), \
+           jax.lax.select(hit != 0, (1/tau_syn * tpost_t), 0.0)
 del apply_recv_gradient_jvp

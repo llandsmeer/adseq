@@ -25,6 +25,7 @@ def _enqueue_grad(primals, tangents):
     self, n = primals
     self_t, n_t = tangents
     return _enqueue(self, n), SingleSpike(jnp.array(n_t, dtype=self.last_spike.dtype))
+
 del _enqueue_grad
 
 
@@ -47,7 +48,7 @@ def _pop_grad(primals, tangents):
             hit.astype(self.last_spike.dtype)), \
            (jax.lax.cond(hit,
                          lambda: SingleSpike(jnp.array(0, dtype=self.last_spike.dtype)),
-                         lambda: self),
+                         lambda: self_t),
             self_t.last_spike)
 del _pop_grad
 
