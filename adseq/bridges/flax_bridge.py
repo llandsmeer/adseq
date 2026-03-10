@@ -213,7 +213,7 @@ class LIF(nn.Module):
     tau_mem: float = 10.
     vthres: float = 1.0
     reset_gradient: typing.Literal['surrogate'] = 'surrogate'
-    output: typing.Literal['voltage'] | typing.Literal['single_spike'] | typing.Literal['ttfs'] | typing.Literal['superspike'] = 'voltage'
+    output: typing.Literal['voltage'] | typing.Literal['single_spike'] | typing.Literal['ttfs'] | typing.Literal['superspike'] | typing.Literal['ttfs_and_spike'] = 'voltage'
 
     def setup(self):
         assert self.reset_gradient == 'surrogate'
@@ -226,6 +226,8 @@ class LIF(nn.Module):
             self.model_output = SingleSpikeFilter(self.dt, self.vthres)
         elif self.output == 'ttfs':
             self.model_output = TTFSFilter(self.dt, self.vthres)
+        elif self.output == 'ttfs_and_spike':
+            self.model_output = TTFSAndSpikeFilter(self.dt, self.vthres)
 
     def init_carry(self, isyn):
         carry = self.model.init_carry(isyn)
@@ -294,7 +296,7 @@ class SingleSpikeFilter(nn.Module):
             assert len(carry) == 2
             vhold, ts = carry
         out = jnp.where(vhold >= self.vthres, vhold, v)
-        vhold = jnp.where(vhold >= self.vthres, vhold, jax.lax.stop_gradient(v))
+        vhold = jnp.where(vhold >= self.vthres, vhold, v) # would prefer stop gradient here
         if len(carry) == 3:
             return (vhold, ts+1, vnext), out
         else:
@@ -315,7 +317,7 @@ class TTFSFilter(nn.Module):
             return -1 + 0*v, 0
 
     @nn.compact
-    def __call__(self, carry: LIFCarry, v: jax.Array, vnext: jax.Array|None=None) -> tuple[TTFSCarry, jax.Array]:
+    def __call__(self, carry: TTFSCarry, v: jax.Array, vnext: jax.Array|None=None) -> tuple[TTFSCarry, jax.Array]:
         if vnext is None:
             assert len(carry) == 3
             ttfs, ts, vprev = carry
@@ -334,6 +336,19 @@ class TTFSFilter(nn.Module):
             return (ttfs, ts+1, vnext), ttfs
         else:
             return (ttfs, ts+1), ttfs
+
+class TTFSAndSpikeFilter(TTFSFilter):
+    '''
+    Receives voltages, outputs differentiable first spike time and surrogate-differentiable spike-indicator
+
+    The main use case is that when there is no spike generated under TTFS, the spike-indicator can help the model generate a spike.
+    '''
+
+    def __call__(self, carry: TTFSCarry, v: jax.Array, vnext: jax.Array|None=None) -> tuple[TTFSCarry, tuple[jax.Array, jax.Array]]:
+        carry, ttfs = super().__call__(carry, v, vnext)
+        # wrong when it actualy spikes! doesn't matter for the use case
+        S = jnp.where(ttfs == -1, superspike(v - self.vthres), v*0 + 1)
+        return carry, (ttfs, S)
 
 @jax.custom_jvp
 def superspike(x):

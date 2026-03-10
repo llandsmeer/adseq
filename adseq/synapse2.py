@@ -14,7 +14,7 @@ def mk_synapse2(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms,
 
     >>> syn = adseq.mk_synapse2(
             adseq.SingleSpike,
-            dt_ms=0.1,
+            dt_ms=1.0,
             vthres=1.0,
             tau_syn1_ms=1.0,
             tau_syn2_ms=10.0,
@@ -26,10 +26,10 @@ def mk_synapse2(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_syn2_ms,
     0.0
     >>> syn = syn.timestep_spike_detect_pre(1, 0.9, 0.9, 0.0)
     >>> print(syn.isyn)
-    1.0
+    0.0
     >>> syn = syn.timestep_spike_detect_pre(2, 0.9, 0.9, 0.0)
     >>> print(syn.isyn)
-    0.12228451
+    0.7705642
 
     If taking gradient w.r.t. delay_ms, put max_delay_ms and give delay_ms in the detection call
     '''

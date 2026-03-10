@@ -50,7 +50,8 @@ For the configurable capacity limited queues (`FIFORing`, `SortedArray`, `LossyR
 ### Synapses
 
 
-Synapses (`mk_synapse()` and `mk_synapse2()`) provide one function `timestep_spike_detect_pre()` which is supposed to be called every timestep, and a synaptic current output property `isyn`.
+Synapses (`mk_synapse()` and `mk_synapse2()`) provide the function `timestep_spike_detect_pre()` which is supposed to be called every timestep, and a synaptic current output property `isyn`.
+Furthermore, a function `timestep_static_spike()` is provides for insertion of input spikes (without gradients towards the spike existance, but still w.r.t. delay).
 
 
 If you have more than one neuron (the usual case), the constructors `mk_synapses()` and `mk_synapse2s()` provide
