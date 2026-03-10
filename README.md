@@ -8,7 +8,85 @@
 pip install adseq
 ```
 
-## RSNN example
+## Usage
+
+ADSEQ consists of three layers: queue implementations, synapses and bridges.
+
+The queue implementations are simple queues with an enqueue() and pop() function, that are carefully written such that tangents are retained alongside primal values in the queue; i.e. they are autodifferentiable.
+
+Synapsesbuild on top of these to provide single or double exponential synapses that correctly handle differentiation though a voltage-threshold based spike detector.
+
+Finally bridges allow using these primitives within other frameworks.
+
+### Queues
+
+All queues implement the BaseQueue protocol
+
+```
+class BaseQueue(Protocol):
+    @classmethod
+    def init(cls, delay: int|None) -> Self: ...
+    def enqueue(self, n: int) -> Self: ...
+    def pop(self, n: int) -> Tuple[Self, int | jax.Array]: ...
+```
+
+For the configurable capacity limited queues (`FIFORing`, `SortedArray`, `LossyRing` and `BinaryHeap`), a `.sized(n)` classmethod exists to create the specified capacity-limited queue. The `delay` argument to init() specifies the maximum queue capacity in the case of `Ring`.
+
+
+| Implementation  | Usecase/Platform | Limitations |
+| --------------- | -------------------- | ----------------- |
+| DoNothing       | Testing              | no spikes at all                |
+| SingleSpike     | TTFS                 | only single spike                |
+| SingleSpikeKeep | Performance          | only single spike               |
+| SortedArray     | TPU                  |                |
+| BGPQ1           | --                   |                |
+| LossyRing       | --                   |                |
+| BinaryHeap      | CPU                  |                |
+| FIFORing        | CPU/GPU              | only homogeneous delays               |
+| Ring            | GPU                  | maximum delay               |
+| BitArray32      | *                    | fixed 32 spike capacity, no gradients                |
+
+
+### Synapses
+
+
+Synapses (`mk_synapse()` and `mk_synapse2()`) provide one function `timestep_spike_detect_pre()` which is supposed to be called every timestep, and a synaptic current output property `isyn`.
+
+
+If you have more than one neuron (the usual case), the constructors `mk_synapses()` and `mk_synapse2s()` provide
+
+The detection function relies on `v` and `vnext`, for both the detection of a spike and estimating dv/dt for gradient calculation.
+
+#### Single synapse
+
+Example:
+```
+syn = adseq.mk_synapse2(
+        adseq.SingleSpike,
+        dt_ms=1.0,
+        vthres=1.0,
+        tau_syn1_ms=1.0,
+        tau_syn2_ms=10.0,
+        max_delay_ms=100.,
+        )
+a = 1.0
+d = 1.0
+syn = syn.timestep_spike_detect_pre(t_ms=0, v=1.0-a*0.1, vnext=1.0+a*0.1, delay_ms=d)
+print(syn.isyn)
+# 0.0
+syn = syn.timestep_spike_detect_pre(t_ms=1, v=0.9, vnext=0.9, delay_ms=0.0)
+print(syn.isyn)
+# 0.0
+syn = syn.timestep_spike_detect_pre(t_ms=2, v=0.9, vnext=0.9, delay_ms=0.0)
+print(syn.isyn)
+# 0.7705642
+```
+
+In this example, the synaptic current should be autodifferentiable toward the voltage slope `a` and delay `d`.
+
+#### RSNN example
+
+Synapses can be used to construct networks.
 
 ```python
 Q = adseq.implementations.FIFORing.sized(3)
@@ -32,11 +110,12 @@ def step(state, t):
     return state, (v, s)
 _, trace = jax.lax.scan(step, state, xs=ts = jnp.arange(10000)*dt)
 ```
-# Bridges
+
+### Bridges
 
 `adseq` does not aim to be another brain simulation package. Instead, it provides 'bridges' to other existing packages.
 
-## Jaxley example
+#### Jaxley example
 
 Support is a bit experimental.
 Note that performance will be suboptimal, and limited to singlespike implemetations, until [Jaxley PR646](https://github.com/jaxleyverse/jaxley/issues/632) is merged
@@ -72,7 +151,7 @@ for i in range(100):
     opt_params = optax.apply_updates(opt_params, updates)
 ```
 
-## Flax bridge
+#### Flax bridge
 
 ```python
 import flax.linen as nn
