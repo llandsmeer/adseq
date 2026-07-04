@@ -83,6 +83,6 @@ def _pop_grad(primals, tangents):
             jax.lax.select(hit,
                 self_t.buffer.at[idx].set(0, mode='promise_in_bounds'),
                 self_t.buffer)), \
-                self_t.buffer.at[idx].get(mode='promise_in_bounds')
+                jnp.where(hit, self_t.buffer.at[idx].get(mode='promise_in_bounds'), jnp.array(0, dtype=self.buffer.dtype))
     return primal_out, tangent_out
 del _pop_grad

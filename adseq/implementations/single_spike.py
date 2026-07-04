@@ -50,7 +50,7 @@ def _pop_grad(primals, tangents):
     tangent_out = (SingleSpike(jnp.where(hit,
                 jnp.array(0, dtype=self.last_spike.dtype),
                 self_t.last_spike)
-        ), self_t.last_spike)
+        ), jnp.where(hit, self_t.last_spike, jnp.array(0, dtype=self.last_spike.dtype)))
     return primal_out, tangent_out
 del _pop_grad
 

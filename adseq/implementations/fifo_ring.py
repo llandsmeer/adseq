@@ -87,5 +87,5 @@ def _pop_jvp(primals, tangents):
                jax.lax.select(hit, self_t.buffer.at[self.head].set(INT_MAX, mode='promise_in_bounds'), self_t.buffer),
                self_t.head,
                self_t.size
-       ), self_t.buffer[self.head])
+        ), jnp.where(hit, self_t.buffer[self.head], jnp.array(0, dtype=self.buffer.dtype)))
 del _pop_jvp

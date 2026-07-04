@@ -3,6 +3,7 @@ Assumes sorted inputs, ie homogeneous delays
 '''
 
 import functools
+import math
 import typing
 import jax
 import jax.numpy as jnp
@@ -84,25 +85,23 @@ def _pop(self, n):
 def _pop_jvp(primals, tangents):
     self, n = primals
     self_t, n_t = tangents
-    buffer = self.buffer.at[0].set(self.buffer[self.size-1])
-    buffer_t = self.buffer.at[0].set(self_t.buffer[self.size-1])
-    #
-    root = buffer[0]
+    del n_t
+    root = self.buffer[0]
     hit = (self.size > 0) & (n >= root)
-    buffer = buffer.at[0].set(buffer[self.size-1])
-    buffer_t = buffer_t.at[0].set(0.)
+    buffer = self.buffer.at[0].set(self.buffer[self.size-1])
+    buffer_t = self_t.buffer.at[0].set(self_t.buffer[self.size-1])
     size = self.size - 1
     buffer, buffer_t = _down_dual(size, buffer, buffer_t, 0)
-    inner_buffer_p = jnp.where(self.size >= 1, self.buffer, buffer)
+    inner_buffer_p = jnp.where(self.size == 1, self.buffer, buffer)
+    inner_buffer_t = jnp.where(self.size == 1, self_t.buffer, buffer_t)
     primal_out = (BinaryHeap(
                       jnp.where(hit, inner_buffer_p, self.buffer),
                       jnp.where(hit, self.size - 1, self.size)),
                   hit.astype(self.buffer.dtype))
-    inner_buffer_t = jnp.where(self.size >= 1, self_t.buffer, buffer_t)
     tangent_out = (BinaryHeap(
-                       jnp.where(hit, inner_buffer_t, self_t.buffer),
-                       self_t.size),
-                   jnp.where(hit, self_t.buffer[0], jnp.array(0., dtype=self.buffer.dtype)))
+                   jnp.where(hit, inner_buffer_t, self_t.buffer),
+                   self_t.size),
+               jnp.where(hit, self_t.buffer[0], jnp.array(0., dtype=self.buffer.dtype)))
     return primal_out, tangent_out
 
 
@@ -131,8 +130,6 @@ def _down(size, buffer, i):
         smallest = jax.lax.select((l < size) & (buffer[l] < buffer[smallest]), l, smallest)
         smallest = jax.lax.select((r < size) & (buffer[r] < buffer[smallest]), r, smallest)
         return smallest, current, buffer
-    print(type(i))
-    print(type(buffer))
     return jax.lax.while_loop(cond, body, (smallest, current, buffer))[2]
 
 def _up(buffer, i):
@@ -144,8 +141,6 @@ def _up(buffer, i):
         buffer = _swap(buffer, i, parent(i))
         i = parent(i)
         return i, buffer
-    print(type(i))
-    print(type(buffer))
     return jax.lax.while_loop(cond, body, (i, buffer))[1]
 
 def _down_dual(size, buffer, buffer_t, i):
@@ -154,41 +149,72 @@ def _down_dual(size, buffer, buffer_t, i):
     smallest = current
     smallest = jax.lax.select((l < size) & (buffer[l] < buffer[smallest]), l, smallest)
     smallest = jax.lax.select((r < size) & (buffer[r] < buffer[smallest]), r, smallest)
-    def cond(x):
-        smallest, current, buffer, buffer_t = x
-        del buffer_t
-        del buffer
-        return smallest != current
-    def body(x):
-        smallest, current, buffer, buffer_t = x
-        buffer = _swap(buffer, current, smallest)
-        buffer_t = _swap(buffer_t, current, smallest)
-        current = smallest
-        l, r = left_child(current), right_child(current)
-        smallest = current
-        smallest = jax.lax.select((l < size) & (buffer[l] < buffer[smallest]), l, smallest)
-        smallest = jax.lax.select((r < size) & (buffer[r] < buffer[smallest]), r, smallest)
-        return smallest, current, buffer, buffer_t
-    print(type(i))
-    print(type(buffer))
-    smallest, current, buffer, buffer_t = jax.lax.while_loop(cond, body, (smallest, current, buffer, buffer_t))
+    if isinstance(buffer_t, jax.core.Tracer):
+        cap = buffer.shape[0]
+        max_iters = int(math.log2(max(cap, 2))) + 1
+        def scan_body(carry, _):
+            smallest, current, buffer, buffer_t, done = carry
+            should_swap = (~done) & (smallest != current)
+            swapped_buffer = _swap(buffer, current, smallest)
+            swapped_buffer_t = _swap(buffer_t, current, smallest)
+            new_current = jnp.where(should_swap, smallest, current)
+            new_buffer = jnp.where(should_swap, swapped_buffer, buffer)
+            new_buffer_t = jnp.where(should_swap, swapped_buffer_t, buffer_t)
+            l, r = left_child(new_current), right_child(new_current)
+            new_smallest = new_current
+            new_smallest = jax.lax.select((l < size) & (new_buffer[l] < new_buffer[new_smallest]), l, new_smallest)
+            new_smallest = jax.lax.select((r < size) & (new_buffer[r] < new_buffer[new_smallest]), r, new_smallest)
+            new_done = done | (~should_swap)
+            return (new_smallest, new_current, new_buffer, new_buffer_t, new_done), None
+        init = (smallest, current, buffer, buffer_t, jnp.array(False))
+        (_, _, buffer, buffer_t, _), _ = jax.lax.scan(scan_body, init, None, length=max_iters)
+    else:
+        def cond(x):
+            smallest, current, buffer, buffer_t = x
+            del buffer_t, buffer
+            return smallest != current
+        def body(x):
+            smallest, current, buffer, buffer_t = x
+            buffer = _swap(buffer, current, smallest)
+            buffer_t = _swap(buffer_t, current, smallest)
+            current = smallest
+            l, r = left_child(current), right_child(current)
+            smallest = current
+            smallest = jax.lax.select((l < size) & (buffer[l] < buffer[smallest]), l, smallest)
+            smallest = jax.lax.select((r < size) & (buffer[r] < buffer[smallest]), r, smallest)
+            return smallest, current, buffer, buffer_t
+        _, _, buffer, buffer_t = jax.lax.while_loop(cond, body, (smallest, current, buffer, buffer_t))
     return buffer, buffer_t
 
 def _up_dual(buffer, buffer_t, i):
-    def cond(x):
-        i, buffer, buffer_t = x
-        return (i != 0) & (buffer[parent(i)] > buffer[i])
-    def body(x):
-        i, buffer, buffer_t = x
-        i_up = parent(i)
-        buffer = _swap(buffer, i, i_up)
-        buffer_t = _swap(buffer_t, i, i_up)
-        i = parent(i)
-        return i, buffer, buffer_t
-    print(type(i))
-    print(type(buffer))
-    _i, out, out_t = jax.lax.while_loop(cond, body, (i, buffer, buffer_t))
-    del _i
+    if isinstance(buffer_t, jax.core.Tracer):
+        cap = buffer.shape[0]
+        max_iters = int(math.log2(max(cap, 2))) + 1
+        def scan_body(carry, _):
+            i, buffer, buffer_t, done = carry
+            pi = parent(i)
+            should_swap = (~done) & (i != 0) & (buffer[pi] > buffer[i])
+            swapped_buffer = _swap(buffer, i, pi)
+            swapped_buffer_t = _swap(buffer_t, i, pi)
+            new_buffer = jnp.where(should_swap, swapped_buffer, buffer)
+            new_buffer_t = jnp.where(should_swap, swapped_buffer_t, buffer_t)
+            new_i = jnp.where(should_swap, pi, i)
+            new_done = done | (~should_swap)
+            return (new_i, new_buffer, new_buffer_t, new_done), None
+        init = (i, buffer, buffer_t, jnp.array(False))
+        (_, out, out_t, _), _ = jax.lax.scan(scan_body, init, None, length=max_iters)
+    else:
+        def cond(x):
+            i, buffer, buffer_t = x
+            return (i != 0) & (buffer[parent(i)] > buffer[i])
+        def body(x):
+            i, buffer, buffer_t = x
+            i_up = parent(i)
+            buffer = _swap(buffer, i, i_up)
+            buffer_t = _swap(buffer_t, i, i_up)
+            i = parent(i)
+            return i, buffer, buffer_t
+        _, out, out_t = jax.lax.while_loop(cond, body, (i, buffer, buffer_t))
     return out, out_t
 
 

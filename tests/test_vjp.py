@@ -49,10 +49,11 @@ def test_pop_reverse_mode_annotated(Q):
 @pytest.mark.parametrize("Q", check)
 def test_pop_reverse_mode_equal(Q):
     def go(param):
-        t_spk = param ** 2
-        q = Q.init(1, grad=True)
+        t_spk = param
+        q = Q.init(20, grad=True)
         q = q.enqueue(t_spk)
         return q.pop(10.)[1]
     assert jax.jacrev(go)(10.) == jax.jacfwd(go)(10.)
-    assert jax.jacrev(go)(20.) != jax.jacfwd(go)(10.)
+    assert jax.jacrev(go)(10.) != 0.0
+    assert jax.jacrev(go)(20.) == 0.0
     assert jax.jacrev(go)(20.) == jax.jacfwd(go)(20.)

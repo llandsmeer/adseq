@@ -42,7 +42,8 @@ def time_queue_single(QueueT: type[implementations.BaseQueue]):
         queue, total = carry
         t, ev = arg
         queue, out = queue.pop(t)
-        queue = jax.lax.cond(ev, lambda: queue.enqueue(t + delay), lambda: queue)
+        enqueued = queue.enqueue(t + delay)
+        queue = jax.tree.map(lambda a, b: jnp.where(ev, a, b), enqueued, queue)
         total = total + out
         return (queue, total), None
     runner = benchmarks.mkrunner_loop(
@@ -80,7 +81,8 @@ def time_queue_batched(
         key, key_next = jax.random.split(key)
         evs = jax.random.uniform(key, shape=(num,)) < 1 / lam
         queue, out = jax.vmap(lambda q: q.pop(t))(qs)
-        queue = jax.vmap(lambda e, q: jax.lax.cond(e, lambda: q.enqueue(t + delay), lambda: q))(evs, qs)
+        queue = jax.vmap(lambda e, q: jax.tree.map(
+            lambda a, b: jnp.where(e, a, b), q.enqueue(t + delay), q))(evs, qs)
         total = total + out.sum()
         return (queue, total, key_next, t + 1), None
     init = jax.vmap(lambda _: QueueT.init(delay))(jnp.full(num, 0)) # type: ignore

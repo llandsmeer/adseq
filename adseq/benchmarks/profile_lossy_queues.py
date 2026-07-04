@@ -23,7 +23,8 @@ def spike_drop(QueueT, lam=10, delay=1, Nevents=100, drop=20, key=jax.random.PRN
     def f_loop(queue, arg):
         t, ev = arg
         queue, out = queue.pop(t)
-        queue = jax.lax.cond(ev, lambda: queue.enqueue(t + delay), lambda: queue)
+        enqueued = queue.enqueue(t + delay)
+        queue = jax.tree.map(lambda a, b: jnp.where(ev, a, b), enqueued, queue)
         return queue, out
     _, trace = jax.lax.scan(f_loop, QueueT.init(delay), xs=(jnp.arange(len(stream)), stream))
     expected = jnp.roll(stream.at[-drop:].set(False), delay).at[-drop:].set(False)
@@ -41,7 +42,7 @@ def make_plot(imp, ax, outlist):
         key = jax.random.PRNGKey(0)
         f = jax.jit(lambda delay, key: jax.vmap(lambda delay: spike_drop(imp, lam=lam, delay=delay, Nevents=1000, drop=200, key=key))(delay))
         assert dly.max() <= 200
-        for i in range(3):
+        for i in range(100):
             key, k = jax.random.split(key)
             out = f(dly, k)
             o.append(out)

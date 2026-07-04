@@ -76,5 +76,5 @@ def _pop_jvp(primals, tangents):
         ), hit.astype(self.buffer.dtype)), \
         (SortedArray(
             jax.lax.select(hit, jnp.roll(self_t.buffer.at[0].set(0), -1), self_t.buffer)
-        ), self_t.buffer[0])
+        ), jnp.where(hit, self_t.buffer[0], jnp.array(0, dtype=self.buffer.dtype)))
 del _pop_jvp

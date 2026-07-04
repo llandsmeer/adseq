@@ -44,15 +44,17 @@ def test_synapse_grad(Q):
 @pytest.mark.parametrize("Q", check)
 def test_synapse_grad_wrt_delay(Q):
     def sim(theta):
-        syn = synapse.mk_synapse(Q, delay_ms=theta, dt_ms=0.1, vthres=1.0, tau_syn_ms=1.0, max_delay_ms=10)
-        f = type(syn).timestep_spike_detect_pre
-        loss = 0
-        for i in range(40):
-            t = 0.1*i
-            syn = f(syn, ts=t, v=t, vnext=t+0.1)
-            goal = t > 2
-            loss = loss + (goal - syn.isyn)**2
-        return loss
+        dt = 0.01
+        syn = synapse.mk_synapse(Q, delay_ms=theta, dt_ms=dt, vthres=1.0, tau_syn_ms=1.0, max_delay_ms=10)
+        f = jax.jit(type(syn).timestep_spike_detect_pre)
+        def step(carry, i):
+            syn, v = carry
+            t = dt * i
+            vnext = v + dt
+            syn = f(syn, ts=t, v=v, vnext=vnext)
+            return (syn, vnext), None
+        (syn, _), _ = jax.lax.scan(step, (syn, 0.0), jnp.arange(400))
+        return (syn.isyn - 0.2)**2
     gfwd = jax.jit(jax.jacfwd(sim))
     grev = jax.jit(jax.jacrev(sim))
     a = gfwd(0.5)

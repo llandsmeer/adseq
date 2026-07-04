@@ -56,6 +56,6 @@ def _pop_grad(primals, tangents):
             hit.astype(self.last_spike.dtype)), \
            (SingleSpikeKeep(jnp.where(hit,
                                        jnp.array(0, dtype=self.last_spike.dtype),
-                                       self_t.last_spike)),
-            self_t.last_spike)
+             self_t.last_spike)),
+             jnp.where(hit, self_t.last_spike, jnp.array(0, dtype=self.last_spike.dtype)))
 del _pop_grad

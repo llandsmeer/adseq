@@ -66,9 +66,8 @@ class DelaySynapse(Synapse):
         def timestep(ts, queue, isyn, v, vnext, delay_ms, tau_syn_ms):
             alpha = jnp.exp(-delta_t / tau_syn_ms) # inefficient
             tpost = synapse.spike_detect(delta_t, ts, vthres, v, vnext, delay_ms)
-            queue = jax.lax.cond(tpost != -1, # must be a better solution
-                 lambda: queue.enqueue(synapse.time_to_timestep_keep_gradient(tpost, delta_t)), # type: ignore
-                 lambda: queue)
+            enqueued = queue.enqueue(synapse.time_to_timestep_keep_gradient(tpost, delta_t)) # type: ignore
+            queue = jax.tree.map(lambda a, b: jnp.where(tpost != -1, a, b), enqueued, queue)
             queue, post_hit = queue.pop(synapse.time_to_timestep_keep_gradient(ts, delta_t))
             isyn = alpha * isyn + \
                    synapse.apply_recv_gradient(post_hit, tau_syn_ms)
