@@ -45,10 +45,10 @@ def _enqueue(self, n):
     buffer = self.buffer.at[self.size].set(n)
     size = self.size + 1
     buffer = _up(buffer, size-1)
-    return jax.lax.cond(
-        self.size == self.buffer.shape[0],
-        lambda: self,
-        lambda: BinaryHeap(buffer, size))
+    full = self.size == self.buffer.shape[0]
+    return BinaryHeap(
+        jnp.where(full, self.buffer, buffer),
+        jnp.where(full, self.size, size))
 
 @_enqueue.defjvp
 def _enqueue_jvp(primals, tangents):
@@ -58,14 +58,13 @@ def _enqueue_jvp(primals, tangents):
     buffer_t = self_t.buffer.at[self.size].set(n_t)
     size = self.size + 1
     buffer, buffer_t = _up_dual(buffer, buffer_t, size-1)
-    primal_out = jax.lax.cond(
-        self.size == self.buffer.shape[0],
-        lambda: self,
-        lambda: BinaryHeap(buffer, size))
-    tangent_out = jax.lax.cond(
-        self.size == self.buffer.shape[0],
-        lambda: self_t,
-        lambda: BinaryHeap(buffer_t, self_t.size))
+    full = self.size == self.buffer.shape[0]
+    primal_out = BinaryHeap(
+        jnp.where(full, self.buffer, buffer),
+        jnp.where(full, self.size, size))
+    tangent_out = BinaryHeap(
+        jnp.where(full, self_t.buffer, buffer_t),
+        self_t.size)
     return primal_out, tangent_out
 
 @jax.custom_jvp
@@ -75,12 +74,11 @@ def _pop(self, n):
     buffer = self.buffer.at[0].set(self.buffer[self.size-1])
     size = self.size - 1
     buffer = _down(size, buffer, 0)
-    return jax.lax.cond(hit,
-         lambda: (jax.lax.cond(self.size == 1,
-             lambda: BinaryHeap(self.buffer, self.size-1),
-             lambda: BinaryHeap(buffer, size)),
-                  jnp.array(1., dtype=self.buffer.dtype)), # root)
-         lambda: (self, jnp.array(0., dtype=self.buffer.dtype)))
+    inner_buffer = jnp.where(self.size == 1, self.buffer, buffer)
+    return (BinaryHeap(
+                jnp.where(hit, inner_buffer, self.buffer),
+                jnp.where(hit, self.size - 1, self.size)),
+            hit.astype(self.buffer.dtype))
 
 @_pop.defjvp
 def _pop_jvp(primals, tangents):
@@ -95,18 +93,16 @@ def _pop_jvp(primals, tangents):
     buffer_t = buffer_t.at[0].set(0.)
     size = self.size - 1
     buffer, buffer_t = _down_dual(size, buffer, buffer_t, 0)
-    primal_out =  jax.lax.cond(hit,
-         lambda: (jax.lax.cond(self.size >= 1,
-             lambda: BinaryHeap(self.buffer, self.size-1),
-             lambda: BinaryHeap(buffer, size)),
-                  jnp.array(1., dtype=self.buffer.dtype)),
-         lambda: (self, jnp.array(0., dtype=self.buffer.dtype)))
-    tangent_out =  jax.lax.cond(hit,
-         lambda: (jax.lax.cond(self.size >= 1,
-             lambda: BinaryHeap(self_t.buffer, self_t.size),
-             lambda: BinaryHeap(buffer_t, self_t.size)),
-                  self_t.buffer.at[0].get()),
-         lambda: (self_t, jnp.array(0., dtype=self.buffer.dtype)))
+    inner_buffer_p = jnp.where(self.size >= 1, self.buffer, buffer)
+    primal_out = (BinaryHeap(
+                      jnp.where(hit, inner_buffer_p, self.buffer),
+                      jnp.where(hit, self.size - 1, self.size)),
+                  hit.astype(self.buffer.dtype))
+    inner_buffer_t = jnp.where(self.size >= 1, self_t.buffer, buffer_t)
+    tangent_out = (BinaryHeap(
+                       jnp.where(hit, inner_buffer_t, self_t.buffer),
+                       self_t.size),
+                   jnp.where(hit, self_t.buffer[0], jnp.array(0., dtype=self.buffer.dtype)))
     return primal_out, tangent_out
 
 
@@ -135,6 +131,8 @@ def _down(size, buffer, i):
         smallest = jax.lax.select((l < size) & (buffer[l] < buffer[smallest]), l, smallest)
         smallest = jax.lax.select((r < size) & (buffer[r] < buffer[smallest]), r, smallest)
         return smallest, current, buffer
+    print(type(i))
+    print(type(buffer))
     return jax.lax.while_loop(cond, body, (smallest, current, buffer))[2]
 
 def _up(buffer, i):
@@ -146,6 +144,8 @@ def _up(buffer, i):
         buffer = _swap(buffer, i, parent(i))
         i = parent(i)
         return i, buffer
+    print(type(i))
+    print(type(buffer))
     return jax.lax.while_loop(cond, body, (i, buffer))[1]
 
 def _down_dual(size, buffer, buffer_t, i):
@@ -169,6 +169,8 @@ def _down_dual(size, buffer, buffer_t, i):
         smallest = jax.lax.select((l < size) & (buffer[l] < buffer[smallest]), l, smallest)
         smallest = jax.lax.select((r < size) & (buffer[r] < buffer[smallest]), r, smallest)
         return smallest, current, buffer, buffer_t
+    print(type(i))
+    print(type(buffer))
     smallest, current, buffer, buffer_t = jax.lax.while_loop(cond, body, (smallest, current, buffer, buffer_t))
     return buffer, buffer_t
 
@@ -183,6 +185,8 @@ def _up_dual(buffer, buffer_t, i):
         buffer_t = _swap(buffer_t, i, i_up)
         i = parent(i)
         return i, buffer, buffer_t
+    print(type(i))
+    print(type(buffer))
     _i, out, out_t = jax.lax.while_loop(cond, body, (i, buffer, buffer_t))
     del _i
     return out, out_t

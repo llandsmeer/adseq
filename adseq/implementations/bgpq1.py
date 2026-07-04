@@ -17,7 +17,9 @@ class BGPQ1(typing.NamedTuple):
     def pop(self, n):
         nxt, ks = self.inner.delete_min(1)
         hit = (ks <= n)[0]
-        return (jax.lax.cond(hit, lambda: BGPQ1(nxt), lambda: self),
+        return (BGPQ1(SRush_BGPQ_KeyOnly(
+                          jnp.where(hit, nxt.key_store, self.inner.key_store),
+                          jnp.where(hit, nxt.size, self.inner.size))),
                 hit.astype('int32'))
 
 class SRush_BGPQ_KeyOnly(typing.NamedTuple):
@@ -86,7 +88,7 @@ def delete_min(heap, msize):
         key_store3, n = \
             jax.lax.fori_loop(0, msize, delete_heapify, (key_store2, 0))
         return key_store3
-    key_store = jax.lax.cond((size == 1).all(), one, two)
+    key_store = jnp.where((size == 1).all(), one(), two())
     size = size - 1
     return (key_store, size), keys
 

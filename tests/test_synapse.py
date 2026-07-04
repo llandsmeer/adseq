@@ -29,23 +29,40 @@ def test_synapse(Q):
 
 @pytest.mark.parametrize("Q", check)
 def test_synapse_grad(Q):
+    @jax.jit
     def sim(theta):
-        syn = synapse.mk_synapse(Q, delay_ms=1, dt_ms=0.1, vthres=1.0, tau_syn_ms=1.0)
+        dt = 0.01
+        syn = synapse.mk_synapse(Q, delay_ms=1, dt_ms=dt, vthres=1.0, tau_syn_ms=1.0)
         f = jax.jit(type(syn).timestep_spike_detect_pre)
-        loss = 0
-        for i in range(40):
-            t = 0.1*i
-            syn = f(syn, ts=t, v=t*theta, vnext=(t+0.1)*theta)
-            goal = t > 2
-            loss = loss + (goal - syn.isyn)**2
-        return loss
-    print(sim(1.0))
+        def step(carry, i):
+            syn, v = carry
+
+            t = dt * i
+            vnext = v + dt * theta
+            syn = f(syn, ts=t, v=v, vnext=vnext)
+
+            return (syn, vnext), None
+
+        (syn, _), _ = jax.lax.scan(step, (syn, 0.0), jnp.arange(400))
+        return (syn.isyn - 0.2)**2
+    print('0.4', sim(0.4))
+    print('0.5', sim(0.5))
+    print('0.6', sim(0.6))
+    print('1.0', sim(1.0))
+    print('1.4', sim(1.4))
+    print('1.5', sim(1.5))
+    print('1.6', sim(1.6))
+    dparam = 0.01
+    a_estim = (sim(0.5+dparam) - sim(0.5-dparam)) / (2*dparam)
     a = jax.grad(sim)(0.5)
     c = jax.grad(sim)(1.5)
+    print('a', a)
+    print('a_estim', a_estim)
     assert jnp.isfinite(a)
     assert jnp.isfinite(c)
     assert a < 0
     assert c > 0
+    assert abs(a - a_estim) < abs(a_estim) * 0.1
 
 @pytest.mark.parametrize("Q", check)
 def test_synapse_grad_wrt_delay(Q):

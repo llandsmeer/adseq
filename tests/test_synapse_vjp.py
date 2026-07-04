@@ -18,15 +18,17 @@ check = [
 @pytest.mark.parametrize("Q", check)
 def test_synapse_grad(Q):
     def sim(theta):
-        syn = synapse.mk_synapse(Q, delay_ms=1, dt_ms=0.1, vthres=1.0, tau_syn_ms=1.0)
+        dt = 0.01
+        syn = synapse.mk_synapse(Q, delay_ms=1, dt_ms=dt, vthres=1.0, tau_syn_ms=1.0)
         f = jax.jit(type(syn).timestep_spike_detect_pre)
-        loss = 0
-        for i in range(40):
-            t = 0.1*i
-            syn = f(syn, ts=t, v=t*theta, vnext=(t+0.1)*theta)
-            goal = t > 2
-            loss = loss + (goal - syn.isyn)**2
-        return loss
+        def step(carry, i):
+            syn, v = carry
+            t = dt * i
+            vnext = v + dt * theta
+            syn = f(syn, ts=t, v=v, vnext=vnext)
+            return (syn, vnext), None
+        (syn, _), _ = jax.lax.scan(step, (syn, 0.0), jnp.arange(400))
+        return (syn.isyn - 0.2)**2
     print(sim(1.0))
     a = jax.jacrev(sim)(0.5)
     c = jax.jacrev(sim)(1.5)

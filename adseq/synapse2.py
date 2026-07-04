@@ -4,6 +4,7 @@ import jax.core
 import jax.numpy as jnp
 import typing
 from .implementations import BaseQueue
+from .synapse import apply_recv_gradient, time_to_timestep_keep_gradient, spike_detect
 
 __all__ = 'mk_synapse2', 'mk_synapse2s'
 
@@ -60,9 +61,8 @@ def _mk_synapse(Q: type[BaseQueue], *a, max_delay_ms, dt_ms, vthres, tau_syn1_ms
             't_ms and delay_ms in ms, vnext is used for spike detection and dvdt estimation'
             tpost = spike_detect(dt_ms, t_ms, vthres, v, vnext, delay_ms)
             queue = self.queue
-            queue = jax.lax.cond(tpost != -1, # must be a better solution
-                 lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
-                 lambda: queue)
+            enqueued = queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)) # type: ignore
+            queue = jax.tree.map(lambda a, b: jnp.where(tpost != -1, a, b), enqueued, queue)
             queue, post_hit = queue.pop(time_to_timestep_keep_gradient(t_ms, dt_ms))
             isyn1 = alpha * self.isyn1 + apply_recv_gradient(post_hit, tau_syn1_ms)
             isyn2 = beta * self.isyn2 + apply_recv_gradient(post_hit, tau_syn2_ms)
@@ -96,9 +96,8 @@ def _mk_multi_synapse(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_sy
             assert len(vnext.shape) == 1 and vnext.shape[0] == n
             def timestep(queue, isyn1, isyn2, v, vnext, delay_ms):
                 tpost = spike_detect(dt_ms, t_ms, vthres, v, vnext, delay_ms)
-                queue = jax.lax.cond(tpost != -1, # must be a better solution
-                     lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
-                     lambda: queue)
+                enqueued = queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)) # type: ignore
+                queue = jax.tree.map(lambda a, b: jnp.where(tpost != -1, a, b), enqueued, queue)
                 queue, post_hit = queue.pop(time_to_timestep_keep_gradient(t_ms, dt_ms))
                 isyn1 = alpha * isyn1 + apply_recv_gradient(post_hit, tau_syn1_ms)
                 isyn2 = beta  * isyn2 + apply_recv_gradient(post_hit, tau_syn2_ms)
@@ -112,9 +111,8 @@ def _mk_multi_synapse(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_sy
             assert len(s.shape) == 1 and s.shape[0] == n
             def timestep(queue, isyn1, isyn2, s, delay_ms):
                 tpost = t_ms + delay_ms
-                queue = jax.lax.cond(s, # must be a better solution
-                     lambda: queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)), # type: ignore
-                     lambda: queue)
+                enqueued = queue.enqueue(time_to_timestep_keep_gradient(tpost, dt_ms)) # type: ignore
+                queue = jax.tree.map(lambda a, b: jnp.where(s, a, b), enqueued, queue)
                 queue, post_hit = queue.pop(time_to_timestep_keep_gradient(t_ms, dt_ms))
                 isyn1 = alpha * isyn1 + apply_recv_gradient(post_hit, tau_syn1_ms)
                 isyn2 = beta  * isyn2 + apply_recv_gradient(post_hit, tau_syn2_ms)
@@ -125,43 +123,3 @@ def _mk_multi_synapse(Q: type[BaseQueue], *a, dt_ms, vthres, tau_syn1_ms, tau_sy
             return StaticMultiSynapse(queues, isyn1, isyn2)
     return StaticMultiSynapse
 
-@jax.custom_jvp
-def spike_detect(dt, t, vthres, v, vnext, delay):
-    hit = (v < vthres) & (vnext >= vthres)
-    del dt
-    return jax.lax.select(hit, t + delay, -1.)
-
-@spike_detect.defjvp
-def spike_detect_vjp(primals, tangents):
-    dt, t, vthres, v, vnext, delay = primals
-    _, _, _, v_t, vnext_t, delay_t = tangents
-    del vnext_t
-    dvdt = (vnext - v) / dt
-    hit = (v < vthres) & (vnext >= vthres)
-    primal_out = jax.lax.select(hit, t + delay, -1.)
-    dvdt_safe = jnp.where(dvdt == 0, 1, dvdt) # wrong but no nans and can't happen in case hit==1
-    tangent_out = jax.lax.select(hit, - 1/dvdt_safe * v_t + delay_t, 0.)
-    return primal_out, tangent_out
-
-@jax.custom_jvp
-def time_to_timestep_keep_gradient(x, dt):
-    return jnp.round(x/dt)
-@time_to_timestep_keep_gradient.defjvp
-def time_to_timestep_keep_gradient_jvp(primals, tangents):
-    x, dt = primals
-    x_t, dt_t = tangents
-    del dt_t
-    return jnp.round(x/dt), x_t
-
-@jax.custom_jvp
-def apply_recv_gradient(hit, tau_syn):
-    del tau_syn
-    return jax.lax.select(hit != 0, 1.0, 0.0)
-@apply_recv_gradient.defjvp
-def apply_recv_gradient_jvp(primals, tangents):
-    hit, tau_syn = primals
-    tpost_t, tau_syn_t = tangents
-    del tau_syn_t
-    return jax.lax.select(hit != 0, 1.0, 0.0), \
-           jax.lax.select(hit != 0, (1/tau_syn * tpost_t), 0.0)
-del apply_recv_gradient_jvp

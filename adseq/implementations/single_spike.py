@@ -32,9 +32,9 @@ del _enqueue_grad
 @jax.custom_jvp
 def _pop(self: SingleSpike, n: float):
     hit = self.last_spike <= n
-    return (jax.lax.cond(hit,
-                         lambda: SingleSpike(jnp.array(INT_MAX, dtype=self.last_spike.dtype)),
-                         lambda: self),
+    return (SingleSpike(jnp.where(hit,
+                                   jnp.array(INT_MAX, dtype=self.last_spike.dtype),
+                                   self.last_spike)),
             hit.astype(self.last_spike.dtype))
 @_pop.defjvp
 def _pop_grad(primals, tangents):
@@ -42,14 +42,16 @@ def _pop_grad(primals, tangents):
     self_t, n_t = tangents
     del n_t
     hit = self.last_spike <= n
-    return (jax.lax.cond(hit,
-                         lambda: SingleSpike(jnp.array(INT_MAX, dtype=self.last_spike.dtype)),
-                         lambda: self),
-            hit.astype(self.last_spike.dtype)), \
-           (jax.lax.cond(hit,
-                         lambda: SingleSpike(jnp.array(0, dtype=self.last_spike.dtype)),
-                         lambda: self_t),
-            self_t.last_spike)
+    primal_out = (SingleSpike(
+            jnp.where(hit,
+                jnp.array(INT_MAX, dtype=self.last_spike.dtype),
+                self.last_spike)
+        ), hit.astype(self.last_spike.dtype))
+    tangent_out = (SingleSpike(jnp.where(hit,
+                jnp.array(0, dtype=self.last_spike.dtype),
+                self_t.last_spike)
+        ), self_t.last_spike)
+    return primal_out, tangent_out
 del _pop_grad
 
 ### @jax.custom_vjp

@@ -20,29 +20,29 @@ class SingleSpikeKeep(typing.NamedTuple):
 @jax.custom_jvp
 def _enqueue(self: SingleSpikeKeep, n: float):
     empty = self.last_spike == INT_MAX
-    return jax.lax.cond(empty,
-                         lambda: SingleSpikeKeep(jnp.array(n, dtype=self.last_spike.dtype)),
-                         lambda: self)
+    return SingleSpikeKeep(jnp.where(empty,
+                                      jnp.array(n, dtype=self.last_spike.dtype),
+                                      self.last_spike))
 @_enqueue.defjvp
 def _enqueue_grad(primals, tangents):
     self, n = primals
     self_t, n_t = tangents
     empty = self.last_spike == INT_MAX
-    return jax.lax.cond(empty,
-                         lambda: SingleSpikeKeep(jnp.array(n, dtype=self.last_spike.dtype)),
-                         lambda: self), \
-           jax.lax.cond(empty,
-                         lambda: SingleSpikeKeep(jnp.array(n_t, dtype=self.last_spike.dtype)),
-                         lambda: self_t)
+    return SingleSpikeKeep(jnp.where(empty,
+                                      jnp.array(n, dtype=self.last_spike.dtype),
+                                      self.last_spike)), \
+           SingleSpikeKeep(jnp.where(empty,
+                                      jnp.array(n_t, dtype=self.last_spike.dtype),
+                                      self_t.last_spike))
 del _enqueue_grad
 
 
 @jax.custom_jvp
 def _pop(self: SingleSpikeKeep, n: float):
     hit = self.last_spike <= n
-    return (jax.lax.cond(hit,
-                         lambda: SingleSpikeKeep(jnp.array(INT_MAX, dtype=self.last_spike.dtype)),
-                         lambda: self),
+    return (SingleSpikeKeep(jnp.where(hit,
+                                       jnp.array(INT_MAX, dtype=self.last_spike.dtype),
+                                       self.last_spike)),
             hit.astype(self.last_spike.dtype))
 @_pop.defjvp
 def _pop_grad(primals, tangents):
@@ -50,12 +50,12 @@ def _pop_grad(primals, tangents):
     self_t, n_t = tangents
     del n_t
     hit = self.last_spike <= n
-    return (jax.lax.cond(hit,
-                         lambda: SingleSpikeKeep(jnp.array(INT_MAX, dtype=self.last_spike.dtype)),
-                         lambda: self),
+    return (SingleSpikeKeep(jnp.where(hit,
+                                       jnp.array(INT_MAX, dtype=self.last_spike.dtype),
+                                       self.last_spike)),
             hit.astype(self.last_spike.dtype)), \
-           (jax.lax.cond(hit,
-                         lambda: SingleSpikeKeep(jnp.array(0, dtype=self.last_spike.dtype)),
-                         lambda: self_t),
+           (SingleSpikeKeep(jnp.where(hit,
+                                       jnp.array(0, dtype=self.last_spike.dtype),
+                                       self_t.last_spike)),
             self_t.last_spike)
 del _pop_grad
