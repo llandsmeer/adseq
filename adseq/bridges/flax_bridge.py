@@ -74,10 +74,11 @@ class DenseInput(nn.Module):
     weight_init: nn.initializers.Initializer= nn.initializers.uniform(1.5)
     delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
     queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
+    max_delay: float = 20.
     def setup(self):
         self.model = Sequential([
             Explode(self.nout),
-            DelayedStaticSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+            DelayedStaticSynapse(self.dt, delay_init=self.delay_init, queue=self.queue, max_delay=self.max_delay),
             LTIReduce(self.nout, self.weight_init)
             ])
     def init_carry(self, x):
@@ -92,10 +93,11 @@ class Dense(nn.Module):
     weight_init: nn.initializers.Initializer= nn.initializers.uniform(1.5)
     delay_init: nn.initializers.Initializer = nn.initializers.normal(1.)
     queue: type[implementations.BaseQueue] = implementations.FIFORing.sized(4) # type: ignore
+    max_delay: float = 20.
     def setup(self):
         self.model = Sequential([
             Explode(self.nout),
-            DelayedThresholdSynapse(self.dt, delay_init=self.delay_init, queue=self.queue),
+            DelayedThresholdSynapse(self.dt, delay_init=self.delay_init, queue=self.queue, max_delay=self.max_delay),
             LTIReduce(self.nout, self.weight_init)
             ])
     def init_carry(self, x):

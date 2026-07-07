@@ -84,7 +84,7 @@ def _pop_jvp(primals, tangents):
                jax.lax.select(hit, self.size-1, self.size)
        ), hit.astype(self.buffer.dtype)), (
            FIFORing(
-               jax.lax.select(hit, self_t.buffer.at[self.head].set(INT_MAX, mode='promise_in_bounds'), self_t.buffer),
+               jax.lax.select(hit, self_t.buffer.at[self.head].set(0., mode='promise_in_bounds'), self_t.buffer),
                self_t.head,
                self_t.size
         ), jnp.where(hit, self_t.buffer[self.head], jnp.array(0, dtype=self.buffer.dtype)))
