@@ -23,6 +23,7 @@ class StaticMultiSynapse(abc.ABC):
 
 TTFSCarry: typing.TypeAlias = tuple[jax.Array, int] | tuple[jax.Array, int, jax.Array]
 LIFCarry: typing.TypeAlias = jax.Array
+AdExCarry: typing.TypeAlias = tuple[jax.Array, jax.Array]
 DelaySynapseCarry: typing.TypeAlias = tuple[StaticMultiSynapse, int] | tuple[StaticMultiSynapse, int, jax.Array]
 
 
@@ -210,7 +211,24 @@ class DelayedStaticSynapse(nn.Module):
         syn = syn.timestep_static_spike(t_ms=self.dt*ts, s=s, delay_ms=delay)
         return (syn, ts+1), isyn
 
+def _make_output_filter(output, dt, vthres):
+    'Shared output-filter selection for spiking-neuron wrapper modules'
+    if output == 'voltage':
+        return None
+    elif output == 'superspike':
+        return SurrogateSpikeFilter(dt, vthres)
+    elif output == 'single_spike':
+        return SingleSpikeFilter(dt, vthres)
+    elif output == 'ttfs':
+        return TTFSFilter(dt, vthres)
+    elif output == 'ttfs_and_spike':
+        return TTFSAndSpikeFilter(dt, vthres)
+    else:
+        raise ValueError(f'unknown output {output!r}')
+
+
 class LIF(nn.Module):
+    'LIF neuron layer'
     dt: float
     tau_mem: float = 10.
     vthres: float = 1.0
@@ -224,16 +242,7 @@ class LIF(nn.Module):
             self.model = ExactLIF(self.dt, self.tau_mem, self.vthres)
         else:
             raise ValueError(f'unknown reset_gradient {self.reset_gradient!r}')
-        if self.output == 'voltage':
-            self.model_output = None
-        elif self.output == 'superspike':
-            self.model_output = SurrogateSpikeFilter(self.dt, self.vthres)
-        elif self.output == 'single_spike':
-            self.model_output = SingleSpikeFilter(self.dt, self.vthres)
-        elif self.output == 'ttfs':
-            self.model_output = TTFSFilter(self.dt, self.vthres)
-        elif self.output == 'ttfs_and_spike':
-            self.model_output = TTFSAndSpikeFilter(self.dt, self.vthres)
+        self.model_output = _make_output_filter(self.output, self.dt, self.vthres)
 
     def init_carry(self, isyn):
         carry = self.model.init_carry(isyn)
@@ -292,6 +301,124 @@ class ExactLIF(nn.Module):
         dvdt_post_spike = isyn
         v_next = v_reset(S, v, dvdt_pre_spike, dvdt_post_spike, vnext_noreset)
         return v_next, v
+
+
+class AdEx(nn.Module):
+    'Adaptive exponential integrate-and-fire neuron layer'
+    dt: float
+    tau_mem: float = 10.
+    tau_w: float = 30.
+    EL: float = 0.
+    VT: float = 0.8
+    delta_T: float = 0.05
+    a: float = 0.
+    b: float = 0.1
+    V_reset: float = 0.
+    V_peak: float = 1.0
+    reset_gradient: typing.Literal['surrogate'] | typing.Literal['exact'] = 'exact'
+    output: typing.Literal['voltage'] | typing.Literal['single_spike'] | typing.Literal['ttfs'] | typing.Literal['superspike'] | typing.Literal['ttfs_and_spike'] = 'voltage'
+
+    def setup(self):
+        kw = dict(dt=self.dt, tau_mem=self.tau_mem, tau_w=self.tau_w, EL=self.EL,
+                  VT=self.VT, delta_T=self.delta_T, a=self.a, b=self.b,
+                  V_reset=self.V_reset, V_peak=self.V_peak)
+        if self.reset_gradient == 'surrogate':
+            self.model = SurrogateAdEx(**kw)
+        elif self.reset_gradient == 'exact':
+            self.model = ExactAdEx(**kw)
+        else:
+            raise ValueError(f'unknown reset_gradient {self.reset_gradient!r}')
+        self.model_output = _make_output_filter(self.output, self.dt, self.V_peak)
+
+    def init_carry(self, isyn):
+        carry = self.model.init_carry(isyn)
+        if self.model_output is None:
+            return carry
+        _carry, v = self.model(carry, isyn)
+        carry_output = self.model_output.init_carry(v)
+        return carry, carry_output
+
+    def __call__(self, carry, isyn):
+        if self.model_output is None:
+            carry, out = self.model(carry, isyn)
+        else:
+            c0, c1 = carry
+            c0, v = self.model(c0, isyn)
+            c1, out = self.model_output(c1, v)
+            carry = c0, c1
+        return carry, out
+
+
+def _adex_dVdt(p, V, w, isyn):
+    arg = jnp.minimum((V - p.VT) / p.delta_T, 20.)
+    return (-(V - p.EL) + p.delta_T * jnp.exp(arg)) / p.tau_mem - w + isyn
+
+def _adex_dwdt(p, V, w):
+    return (p.a * (V - p.EL) - w) / p.tau_w
+
+def _adex_forward(p, V, w, isyn):
+    beta_w = jnp.exp(-p.dt / p.tau_w)
+    V_noreset = V + p.dt * _adex_dVdt(p, V, w, isyn)
+    w_noreset = beta_w * w + p.a * (V - p.EL) * p.dt / p.tau_w
+    return V_noreset, w_noreset
+
+
+class SurrogateAdEx(nn.Module):
+    'AdEx with superspike for the reset'
+    dt: float
+    tau_mem: float = 10.
+    tau_w: float = 30.
+    EL: float = 0.
+    VT: float = 0.8
+    delta_T: float = 0.05
+    a: float = 0.
+    b: float = 0.1
+    V_reset: float = 0.
+    V_peak: float = 1.0
+
+    def init_carry(self, isyn) -> AdExCarry:
+        return isyn * 0, isyn * 0
+
+    @nn.compact
+    def __call__(self, carry: AdExCarry, isyn: jax.Array) -> tuple[AdExCarry, jax.Array]:
+        V, w = carry
+        V_noreset, w_noreset = _adex_forward(self, V, w, isyn)
+        S = superspike(V - self.V_peak)
+        V_next = (1 - S) * V_noreset + S * self.V_reset
+        w_next = w_noreset + S * self.b
+        return (V_next, w_next), V
+
+
+class ExactAdEx(nn.Module):
+    'AdEx with event-based (saltation) gradient through reset'
+    dt: float
+    tau_mem: float = 10.
+    tau_w: float = 30.
+    EL: float = 0.
+    VT: float = 0.8
+    delta_T: float = 0.05
+    a: float = 0.
+    b: float = 0.1
+    V_reset: float = 0.
+    V_peak: float = 1.0
+
+    def init_carry(self, isyn) -> AdExCarry:
+        return isyn * 0, isyn * 0
+
+    @nn.compact
+    def __call__(self, carry: AdExCarry, isyn: jax.Array) -> tuple[AdExCarry, jax.Array]:
+        V, w = carry
+        V_noreset, w_noreset = _adex_forward(self, V, w, isyn)
+        S = V >= self.V_peak
+        fV_pre  = _adex_dVdt(self, V, w, isyn)
+        fV_post = _adex_dVdt(self, self.V_reset, w + self.b, isyn)
+        fw_pre  = _adex_dwdt(self, V, w)
+        fw_post = _adex_dwdt(self, self.V_reset, w + self.b)
+        w_reset = w_noreset + self.b
+        V_next, w_next = adex_reset(S, V, w, fV_pre, fV_post, fw_pre, fw_post,
+                                    V_noreset, self.V_reset, w_noreset, w_reset)
+        return (V_next, w_next), V
+
 
 class SurrogateSpikeFilter(nn.Module):
     'Applies superspike surrogate gradient to voltage'
@@ -408,5 +535,29 @@ def v_reset_jvp(primals, tangents):
     primal_out = jnp.where(S, jnp.zeros_like(vnext), vnext)
     tangent_out = jnp.where(S, reset_t, vnext_t)
     return primal_out, tangent_out
+
+
+@jax.custom_jvp
+def adex_reset(S, V, w, fV_pre, fV_post, fw_pre, fw_post,
+               V_noreset, V_reset, w_noreset, w_reset):
+    del V, w, fV_pre, fV_post, fw_pre, fw_post
+    V_next = jnp.where(S, V_reset, V_noreset)
+    w_next = jnp.where(S, w_reset, w_noreset)
+    return V_next, w_next
+
+@adex_reset.defjvp
+def adex_reset_jvp(primals, tangents):
+    S, V, w, fV_pre, fV_post, fw_pre, fw_post, V_noreset, V_reset, w_noreset, w_reset = primals
+    (S_t, V_t, w_t, fV_pre_t, fV_post_t, fw_pre_t, fw_post_t,
+     V_noreset_t, V_reset_t, w_noreset_t, w_reset_t) = tangents
+    del S_t, fV_pre_t, fV_post_t, fw_pre_t, fw_post_t, V_reset_t, w_reset_t
+    fV_pre_safe = jax.lax.select(fV_pre == 0, jnp.ones_like(fV_pre), fV_pre)  # prevent nans
+    V_reset_tan = fV_post / fV_pre_safe * V_t
+    w_reset_tan = w_t + (fw_post - fw_pre) / fV_pre_safe * V_t
+    V_next = jnp.where(S, V_reset, V_noreset)
+    w_next = jnp.where(S, w_reset, w_noreset)
+    V_next_t = jnp.where(S, V_reset_tan, V_noreset_t)
+    w_next_t = jnp.where(S, w_reset_tan, w_noreset_t)
+    return (V_next, w_next), (V_next_t, w_next_t)
 
 
