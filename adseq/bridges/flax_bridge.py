@@ -214,12 +214,16 @@ class LIF(nn.Module):
     dt: float
     tau_mem: float = 10.
     vthres: float = 1.0
-    reset_gradient: typing.Literal['surrogate'] = 'surrogate'
+    reset_gradient: typing.Literal['surrogate'] | typing.Literal['exact'] = 'exact'
     output: typing.Literal['voltage'] | typing.Literal['single_spike'] | typing.Literal['ttfs'] | typing.Literal['superspike'] | typing.Literal['ttfs_and_spike'] = 'voltage'
 
     def setup(self):
-        assert self.reset_gradient == 'surrogate'
-        self.model = SurrogateLIF(self.dt, self.tau_mem, self.vthres)
+        if self.reset_gradient == 'surrogate':
+            self.model = SurrogateLIF(self.dt, self.tau_mem, self.vthres)
+        elif self.reset_gradient == 'exact':
+            self.model = ExactLIF(self.dt, self.tau_mem, self.vthres)
+        else:
+            raise ValueError(f'unknown reset_gradient {self.reset_gradient!r}')
         if self.output == 'voltage':
             self.model_output = None
         elif self.output == 'superspike':
@@ -251,6 +255,7 @@ class LIF(nn.Module):
 
 
 class SurrogateLIF(nn.Module):
+    'LIF with superspike for the reset'
     dt: float
     tau_mem: float = 10.
     vthres: float = 1.0
@@ -266,7 +271,30 @@ class SurrogateLIF(nn.Module):
         v_next = (1 - S) * (beta * v + isyn*self.dt)
         return v_next, v
 
+
+
+class ExactLIF(nn.Module):
+    'LIF with event-based gradient through reset'
+    dt: float
+    tau_mem: float = 10.
+    vthres: float = 1.0
+
+    def init_carry(self, isyn):
+        return isyn*0
+
+    @nn.compact
+    def __call__(self, carry: LIFCarry, isyn: jax.Array) -> tuple[LIFCarry, jax.Array]:
+        v = carry
+        beta = jnp.exp(-self.dt/self.tau_mem)
+        S = v >= self.vthres
+        vnext_noreset = beta * v + isyn*self.dt
+        dvdt_pre_spike  = isyn - v/self.tau_mem
+        dvdt_post_spike = isyn
+        v_next = v_reset(S, v, dvdt_pre_spike, dvdt_post_spike, vnext_noreset)
+        return v_next, v
+
 class SurrogateSpikeFilter(nn.Module):
+    'Applies superspike surrogate gradient to voltage'
     dt: float = None
     vthres: float = 1.0
     def init_carry(self, v): return None
@@ -363,4 +391,22 @@ def superspike_jvp(primals, tangents):
     primal_out = jnp.where(x < 0, 0.0, 1.0)
     tangent_out = x_dot / (jnp.abs(x)+1)**2
     return primal_out, tangent_out
+
+@jax.custom_jvp
+def v_reset(S, v, dvdt_pre, dvdt_post, vnext):
+    'Exact reset gradient given dvdt before and after spike'
+    del v, dvdt_pre, dvdt_post
+    return jnp.where(S, 0.0, vnext)
+
+@v_reset.defjvp
+def v_reset_jvp(primals, tangents):
+    S, v, dvdt_pre, dvdt_post, vnext = primals
+    S_t, v_t, dvdt_pre_t, dvdt_post_t, vnext_t = tangents
+    del S_t, dvdt_pre_t, dvdt_post_t
+    dvdt_pre = jax.lax.select(dvdt_pre == 0, jnp.ones_like(dvdt_pre), dvdt_pre)  # prevent nans
+    reset_t = dvdt_post / dvdt_pre * v_t
+    primal_out = jnp.where(S, jnp.zeros_like(vnext), vnext)
+    tangent_out = jnp.where(S, reset_t, vnext_t)
+    return primal_out, tangent_out
+
 
